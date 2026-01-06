@@ -2,16 +2,16 @@
 
     <!-- BRAND -->
     <div class="app-brand demo">
-        <a href="#" class="app-brand-link">
+        <a href="{{ route('dashboard') }}" class="app-brand-link">
             <span class="app-brand-logo demo">
                 <i class="bx bxs-store text-primary" style="font-size: 30px;"></i>
             </span>
             <span class="app-brand-text demo menu-text fw-bolder ms-2">
-                Wingko Londo
+                WingkoLondo
             </span>
         </a>
 
-        <a href="#" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
+        <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-block d-xl-none">
             <i class="bx bx-chevron-left bx-sm align-middle"></i>
         </a>
     </div>
@@ -106,32 +106,6 @@
             </a>
         </li>
 
-        {{-- <!-- LAPORAN -->
-        <li class="menu-header small text-uppercase">
-            <span class="menu-header-text">Laporan</span>
-        </li>
-
-        <li class="menu-item">
-            <a href="#" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-file"></i>
-                <div>Laporan Produksi</div>
-            </a>
-        </li>
-
-        <li class="menu-item">
-            <a href="#" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-file-find"></i>
-                <div>Laporan Distribusi</div>
-            </a>
-        </li>
-
-        <li class="menu-item">
-            <a href="#" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-file-blank"></i>
-                <div>Laporan Keuangan</div>
-            </a>
-        </li> --}}
-
         <!-- PENGATURAN -->
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">Pengaturan</span>
@@ -143,13 +117,6 @@
                 <div>Manajemen User</div>
             </a>
         </li>
-
-        {{-- <li class="menu-item">
-            <a href="#" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-log-out"></i>
-                <div>Logout</div>
-            </a>
-        </li> --}}
 
     </ul>
 
