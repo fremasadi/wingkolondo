@@ -33,21 +33,21 @@
             <span class="menu-header-text">Master Data</span>
         </li>
 
-        <li class="menu-item {{ request()->is('tokos*') ? 'active' : '' }}">
+        <li class="menu-item {{ request()->routeIs('tokos.*') ? 'active' : '' }}">
             <a href="{{ route('tokos.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-store"></i>
                 <div>Data Toko</div>
             </a>
         </li>
 
-        <li class="menu-item {{ request()->is('bahan-bakus*') ? 'active' : '' }}">
+        <li class="menu-item {{ request()->routeIs('bahan-bakus.*') ? 'active' : '' }}">
             <a href="{{ route('bahan-bakus.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-package"></i>
                 <div>Bahan Baku</div>
             </a>
         </li>
 
-        <li class="menu-item {{ request()->is('produks*') ? 'active' : '' }}">
+        <li class="menu-item {{ request()->routeIs('produks.*') ? 'active' : '' }}">
             <a href="{{ route('produks.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-cookie"></i>
                 <div>Produk Wingko</div>
@@ -59,28 +59,28 @@
             <span class="menu-header-text">Transaksi</span>
         </li>
 
-        <li class="menu-item {{ request()->is('pesanans*') ? 'active' : '' }}">
+        <li class="menu-item {{ request()->routeIs('pesanans.*') ? 'active' : '' }}">
             <a href="{{ route('pesanans.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-cart"></i>
                 <div>Pesanan</div>
             </a>
         </li>
 
-        <li class="menu-item {{ request()->is('produksis*') ? 'active' : '' }}">
+        <li class="menu-item {{ request()->routeIs('produksis.*') ? 'active' : '' }}">
             <a href="{{ route('produksis.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-cog"></i>
                 <div>Produksi</div>
             </a>
         </li>
 
-        <li class="menu-item {{ request()->is('distribusis*') ? 'active' : '' }}">
+        <li class="menu-item {{ request()->routeIs('distribusis.*') ? 'active' : '' }}">
             <a href="{{ route('distribusis.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-send"></i>
                 <div>Distribusi</div>
             </a>
         </li>
 
-        <li class="menu-item {{ request()->is('returs*') ? 'active' : '' }}">
+        <li class="menu-item {{ request()->routeIs('returs.*') ? 'active' : '' }}">
             <a href="{{ route('returs.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-undo"></i>
                 <div>Retur</div>
@@ -92,14 +92,14 @@
             <span class="menu-header-text">Keuangan</span>
         </li>
 
-        <li class="menu-item {{ request()->is('piutangs*') ? 'active' : '' }}">
+        <li class="menu-item {{ request()->routeIs('piutangs.*') ? 'active' : '' }}">
             <a href="{{ route('piutangs.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-wallet"></i>
                 <div>Piutang</div>
             </a>
         </li>
 
-        <li class="menu-item {{ request()->is('omzet*') ? 'active' : '' }}">
+        <li class="menu-item {{ request()->routeIs('omzet.*') ? 'active' : '' }}">
             <a href="{{ route('omzet.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-line-chart"></i>
                 <div>Omzet</div>
@@ -137,7 +137,7 @@
             <span class="menu-header-text">Pengaturan</span>
         </li>
 
-        <li class="menu-item {{ request()->is('users*') ? 'active' : '' }}">
+        <li class="menu-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
             <a href="{{ route('users.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-user"></i>
                 <div>Manajemen User</div>
