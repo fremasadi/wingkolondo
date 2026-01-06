@@ -1,0 +1,7 @@
+:root {
+    --bs-primary: #C4A484;        /* warna utama */
+    --bs-primary-rgb: 255, 107, 0;
+
+    --bs-link-color: #C4A484;
+    --bs-link-hover-color: #020202;
+  }
