@@ -40,7 +40,7 @@
             </a>
         </li>
 
-        {{-- <li class="menu-item {{ request()->routeIs('bahan-bakus.*') ? 'active' : '' }}">
+        <li class="menu-item {{ request()->routeIs('bahan-bakus.*') ? 'active' : '' }}">
             <a href="{{ route('bahan-bakus.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-package"></i>
                 <div>Bahan Baku</div>
@@ -52,10 +52,10 @@
                 <i class="menu-icon tf-icons bx bx-cookie"></i>
                 <div>Produk Wingko</div>
             </a>
-        </li> --}}
+        </li>
 
         <!-- TRANSAKSI -->
-        {{-- <li class="menu-header small text-uppercase">
+        <li class="menu-header small text-uppercase">
             <span class="menu-header-text">Transaksi</span>
         </li>
 
@@ -85,7 +85,7 @@
                 <i class="menu-icon tf-icons bx bx-undo"></i>
                 <div>Retur</div>
             </a>
-        </li> --}}
+        </li>
 
         <!-- KEUANGAN -->
         {{-- <li class="menu-header small text-uppercase">

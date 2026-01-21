@@ -386,7 +386,7 @@
     </div>
 
     <!-- Pesanan Terbaru -->
-    <div class="row mt-4">
+    {{-- <div class="row mt-4">
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex align-items-center justify-content-between">
@@ -445,7 +445,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
 
 </div>
 
