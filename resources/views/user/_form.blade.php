@@ -7,9 +7,18 @@
 
     <div class="col-md-6 mb-3">
         <label class="form-label">Email</label>
-        <input type="email" name="email" class="form-control"
-            value="{{ old('email', $user->email ?? '') }}" required>
+        <input type="email" name="email"
+            class="form-control @error('email') is-invalid @enderror"
+            value="{{ old('email', $user->email ?? '') }}"
+            required>
+
+        @error('email')
+            <div class="invalid-feedback">
+                {{ $message }}
+            </div>
+        @enderror
     </div>
+
 
     <div class="col-md-6 mb-3">
         <label class="form-label">No HP</label>
