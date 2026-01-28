@@ -10,7 +10,11 @@ class BahanBakuController extends Controller
     public function index()
     {
         $bahanBakus = BahanBaku::latest()->get();
-        return view('bahan_baku.index', compact('bahanBakus'));
+
+        // Hitung bahan dengan stok rendah (misal: <= 10)
+        $stokRendah = $bahanBakus->filter(fn($item) => $item->stok <= 10);
+
+        return view('bahan_baku.index', compact('bahanBakus', 'stokRendah'));
     }
 
     public function create()

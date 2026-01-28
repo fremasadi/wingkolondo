@@ -11,7 +11,48 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bx bx-check-circle me-2"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    {{-- Peringatan Stok Rendah --}}
+    @if($stokRendah->count() > 0)
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bx bx-error bx-tada me-2 fs-4"></i>
+                <div>
+                    <strong>Peringatan Stok Rendah!</strong>
+                    <p class="mb-0 mt-1">
+                        {{ $stokRendah->count() }} bahan baku memiliki stok rendah (≤ 10):
+                        <strong>{{ $stokRendah->pluck('nama_bahan')->implode(', ') }}</strong>
+                    </p>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    {{-- Peringatan Stok Habis --}}
+    @php
+        $stokHabis = $bahanBakus->filter(fn($item) => $item->stok <= 0);
+    @endphp
+    @if($stokHabis->count() > 0)
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bx bx-x-circle bx-flashing me-2 fs-4"></i>
+                <div>
+                    <strong>Stok Habis!</strong>
+                    <p class="mb-0 mt-1">
+                        {{ $stokHabis->count() }} bahan baku sudah habis:
+                        <strong>{{ $stokHabis->pluck('nama_bahan')->implode(', ') }}</strong>
+                    </p>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     @endif
 
     <div class="card">
@@ -28,11 +69,22 @@
                 <tbody>
                     @forelse($bahanBakus as $item)
                     <tr>
-                        <td>{{ $item->nama_bahan }}</td>
                         <td>
-                            <span class="badge bg-label-primary">
-                                {{ $item->stok }}
-                            </span>
+                            {{ $item->nama_bahan }}
+                            @if($item->stok <= 0)
+                                <span class="badge bg-danger ms-1">Habis</span>
+                            @elseif($item->stok <= 10)
+                                <span class="badge bg-warning ms-1">Rendah</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($item->stok <= 0)
+                                <span class="badge bg-label-danger">{{ $item->stok }}</span>
+                            @elseif($item->stok <= 10)
+                                <span class="badge bg-label-warning">{{ $item->stok }}</span>
+                            @else
+                                <span class="badge bg-label-success">{{ $item->stok }}</span>
+                            @endif
                         </td>
                         <td>{{ $item->satuan }}</td>
                         <td>
