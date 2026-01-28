@@ -74,22 +74,17 @@ class ProduksiController extends Controller
                 // ➕ stok produk
                 $produk->increment('stok', $qtyProduksi);
 
+
                 // 2️⃣ Kurangi bahan baku
                 foreach ($produk->bahanBakus as $bahan) {
                     $kebutuhan = $bahan->pivot->qty * $qtyProduksi;
-
-                    if ($bahan->stok < $kebutuhan) {
-                        abort(400, 'Stok bahan baku tidak cukup');
-                    }
-
                     $bahan->decrement('stok', $kebutuhan);
                 }
+
+                // 3️⃣ Update status
+                $produksi->update(['status' => 'selesai']);
             }
 
-            // 3️⃣ Update status produksi
-            $produksi->update([
-                'status' => 'selesai',
-            ]);
         });
 
         return back()->with('success', 'Produksi berhasil diselesaikan');

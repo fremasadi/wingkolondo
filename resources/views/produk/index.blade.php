@@ -36,6 +36,9 @@
                         </td>
                         <td>Rp {{ number_format($produk->harga, 0, ',', '.') }}</td>
                         <td>
+                            <a href="{{ route('produks.show', $produk) }}" class="btn btn-sm btn-info">
+                                <i class="bx bx-show"></i>
+                            </a>
                             <a href="{{ route('produks.edit', $produk) }}" class="btn btn-sm btn-warning">
                                 <i class="bx bx-edit"></i>
                             </a>

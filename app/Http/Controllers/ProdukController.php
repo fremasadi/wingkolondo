@@ -84,4 +84,10 @@ class ProdukController extends Controller
 
         return redirect()->route('produks.index')->with('success', 'Produk berhasil dihapus');
     }
+
+    public function show(Produk $produk)
+{
+    $produk->load('bahanBakus'); // eager load relasi
+    return view('produk.show', compact('produk'));
+}
 }
