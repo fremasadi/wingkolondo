@@ -59,12 +59,12 @@
             <span class="menu-header-text">Transaksi</span>
         </li>
 
-        <li class="menu-item {{ request()->routeIs('pesanans.*') ? 'active' : '' }}">
+        {{-- <li class="menu-item {{ request()->routeIs('pesanans.*') ? 'active' : '' }}">
             <a href="{{ route('pesanans.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-cart"></i>
                 <div>Pesanan</div>
             </a>
-        </li>
+        </li> --}}
 
         <li class="menu-item {{ request()->routeIs('produksis.*') ? 'active' : '' }}">
             <a href="{{ route('produksis.index') }}" class="menu-link">
@@ -73,7 +73,7 @@
             </a>
         </li>
 
-        <li class="menu-item {{ request()->routeIs('distribusis.*') ? 'active' : '' }}">
+        {{-- <li class="menu-item {{ request()->routeIs('distribusis.*') ? 'active' : '' }}">
             <a href="{{ route('distribusis.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-send"></i>
                 <div>Distribusi</div>
@@ -85,7 +85,7 @@
                 <i class="menu-icon tf-icons bx bx-undo"></i>
                 <div>Retur</div>
             </a>
-        </li>
+        </li> --}}
 
         <!-- KEUANGAN -->
         {{-- <li class="menu-header small text-uppercase">
