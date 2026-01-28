@@ -66,25 +66,53 @@ class ProduksiController extends Controller
                 abort(400, 'Produksi sudah diselesaikan');
             }
 
-            // 1️⃣ Tambah stok produk
+            // 🔍 Hitung total kebutuhan bahan baku dulu
+            $kebutuhanBahan = [];
+            foreach ($produksi->details as $detail) {
+                foreach ($detail->produk->bahanBakus as $bahan) {
+                    $kebutuhan = $bahan->pivot->qty * $detail->qty;
+
+                    if (isset($kebutuhanBahan[$bahan->id])) {
+                        $kebutuhanBahan[$bahan->id]['kebutuhan'] += $kebutuhan;
+                    } else {
+                        $kebutuhanBahan[$bahan->id] = [
+                            'nama' => $bahan->nama_bahan,
+                            'stok' => $bahan->stok,
+                            'kebutuhan' => $kebutuhan,
+                        ];
+                    }
+                }
+            }
+
+            // ❌ Validasi stok bahan baku
+            $bahanKurang = [];
+            foreach ($kebutuhanBahan as $bahan) {
+                if ($bahan['stok'] < $bahan['kebutuhan']) {
+                    $bahanKurang[] = "{$bahan['nama']} (butuh: {$bahan['kebutuhan']}, stok: {$bahan['stok']})";
+                }
+            }
+
+            if (count($bahanKurang) > 0) {
+                abort(400, 'Stok bahan baku tidak mencukupi: ' . implode(', ', $bahanKurang));
+            }
+
+            // ✅ Proses jika stok cukup
             foreach ($produksi->details as $detail) {
                 $produk = $detail->produk;
                 $qtyProduksi = $detail->qty;
 
-                // ➕ stok produk
+                // ➕ Tambah stok produk
                 $produk->increment('stok', $qtyProduksi);
 
-
-                // 2️⃣ Kurangi bahan baku
+                // ➖ Kurangi bahan baku
                 foreach ($produk->bahanBakus as $bahan) {
                     $kebutuhan = $bahan->pivot->qty * $qtyProduksi;
                     $bahan->decrement('stok', $kebutuhan);
                 }
-
-                // 3️⃣ Update status
-                $produksi->update(['status' => 'selesai']);
             }
 
+            // 3️⃣ Update status (pindah ke luar loop)
+            $produksi->update(['status' => 'selesai']);
         });
 
         return back()->with('success', 'Produksi berhasil diselesaikan');
