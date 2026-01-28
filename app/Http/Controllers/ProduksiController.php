@@ -58,63 +58,68 @@ class ProduksiController extends Controller
 
     public function selesai($id)
     {
-        DB::transaction(function () use ($id) {
-            $produksi = Produksi::with('details.produk.bahanBakus')->lockForUpdate()->findOrFail($id);
+        try {
+            DB::transaction(function () use ($id) {
+                $produksi = Produksi::with('details.produk.bahanBakus')->lockForUpdate()->findOrFail($id);
 
-            // ❌ Cegah double proses
-            if ($produksi->status === 'selesai') {
-                abort(400, 'Produksi sudah diselesaikan');
-            }
+                // ❌ Cegah double proses
+                if ($produksi->status === 'selesai') {
+                    throw new \Exception('Produksi sudah diselesaikan sebelumnya.');
+                }
 
-            // 🔍 Hitung total kebutuhan bahan baku dulu
-            $kebutuhanBahan = [];
-            foreach ($produksi->details as $detail) {
-                foreach ($detail->produk->bahanBakus as $bahan) {
-                    $kebutuhan = $bahan->pivot->qty * $detail->qty;
+                // 🔍 Hitung total kebutuhan bahan baku dulu
+                $kebutuhanBahan = [];
+                foreach ($produksi->details as $detail) {
+                    foreach ($detail->produk->bahanBakus as $bahan) {
+                        $kebutuhan = $bahan->pivot->qty * $detail->qty;
 
-                    if (isset($kebutuhanBahan[$bahan->id])) {
-                        $kebutuhanBahan[$bahan->id]['kebutuhan'] += $kebutuhan;
-                    } else {
-                        $kebutuhanBahan[$bahan->id] = [
-                            'nama' => $bahan->nama_bahan,
-                            'stok' => $bahan->stok,
-                            'kebutuhan' => $kebutuhan,
-                        ];
+                        if (isset($kebutuhanBahan[$bahan->id])) {
+                            $kebutuhanBahan[$bahan->id]['kebutuhan'] += $kebutuhan;
+                        } else {
+                            $kebutuhanBahan[$bahan->id] = [
+                                'nama' => $bahan->nama_bahan,
+                                'stok' => $bahan->stok,
+                                'kebutuhan' => $kebutuhan,
+                            ];
+                        }
                     }
                 }
-            }
 
-            // ❌ Validasi stok bahan baku
-            $bahanKurang = [];
-            foreach ($kebutuhanBahan as $bahan) {
-                if ($bahan['stok'] < $bahan['kebutuhan']) {
-                    $bahanKurang[] = "{$bahan['nama']} (butuh: {$bahan['kebutuhan']}, stok: {$bahan['stok']})";
+                // ❌ Validasi stok bahan baku
+                $bahanKurang = [];
+                foreach ($kebutuhanBahan as $bahan) {
+                    if ($bahan['stok'] < $bahan['kebutuhan']) {
+                        $kurang = $bahan['kebutuhan'] - $bahan['stok'];
+                        $bahanKurang[] = "{$bahan['nama']} (kurang: {$kurang})";
+                    }
                 }
-            }
 
-            if (count($bahanKurang) > 0) {
-                abort(400, 'Stok bahan baku tidak mencukupi: ' . implode(', ', $bahanKurang));
-            }
-
-            // ✅ Proses jika stok cukup
-            foreach ($produksi->details as $detail) {
-                $produk = $detail->produk;
-                $qtyProduksi = $detail->qty;
-
-                // ➕ Tambah stok produk
-                $produk->increment('stok', $qtyProduksi);
-
-                // ➖ Kurangi bahan baku
-                foreach ($produk->bahanBakus as $bahan) {
-                    $kebutuhan = $bahan->pivot->qty * $qtyProduksi;
-                    $bahan->decrement('stok', $kebutuhan);
+                if (count($bahanKurang) > 0) {
+                    throw new \Exception('Stok bahan baku tidak mencukupi: ' . implode(', ', $bahanKurang));
                 }
-            }
 
-            // 3️⃣ Update status (pindah ke luar loop)
-            $produksi->update(['status' => 'selesai']);
-        });
+                // ✅ Proses jika stok cukup
+                foreach ($produksi->details as $detail) {
+                    $produk = $detail->produk;
+                    $qtyProduksi = $detail->qty;
 
-        return back()->with('success', 'Produksi berhasil diselesaikan');
+                    // ➕ Tambah stok produk
+                    $produk->increment('stok', $qtyProduksi);
+
+                    // ➖ Kurangi bahan baku
+                    foreach ($produk->bahanBakus as $bahan) {
+                        $kebutuhan = $bahan->pivot->qty * $qtyProduksi;
+                        $bahan->decrement('stok', $kebutuhan);
+                    }
+                }
+
+                // ✅ Update status
+                $produksi->update(['status' => 'selesai']);
+            });
+
+            return back()->with('success', 'Produksi berhasil diselesaikan! Stok produk bertambah dan bahan baku berkurang.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 }

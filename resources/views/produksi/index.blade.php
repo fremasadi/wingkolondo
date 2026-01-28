@@ -11,7 +11,19 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bx bx-check-circle me-2"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bx bx-error-circle me-2"></i>
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     @endif
 
     <div class="card">
@@ -41,15 +53,15 @@
                             </td>
                             <td>
                                 <a href="{{ route('produksis.show', $p->id) }}" class="btn btn-sm btn-info">
-                                    Detail
+                                    <i class="bx bx-show"></i>
                                 </a>
 
                                 @if($p->status !== 'selesai')
                                     <form action="{{ route('produksis.selesai', $p->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('PATCH')
-                                        <button class="btn btn-sm btn-success" onclick="return confirm('Selesaikan produksi?')">
-                                            Selesaikan
+                                        <button class="btn btn-sm btn-success" onclick="return confirm('Selesaikan produksi ini?')">
+                                            <i class="bx bx-check"></i> Selesaikan
                                         </button>
                                     </form>
                                 @endif
