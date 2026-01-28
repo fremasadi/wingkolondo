@@ -11,10 +11,10 @@ use DB;
 class ProdukController extends Controller
 {
     public function index()
-    {
-        $produks = Produk::latest()->get();
-        return view('produk.index', compact('produks'));
-    }
+{
+    $produks = Produk::withCount(['detailProduksis', 'detailReturs'])->latest()->get();
+    return view('produk.index', compact('produks'));
+}
 
     public function create()
     {
@@ -80,6 +80,11 @@ class ProdukController extends Controller
 
     public function destroy(Produk $produk)
     {
+        if (!$produk->canBeDeleted()) {
+            return redirect()->route('produks.index')
+                ->with('error', 'Produk tidak dapat dihapus karena sudah digunakan dalam produksi atau retur.');
+        }
+
         $produk->delete();
 
         return redirect()->route('produks.index')->with('success', 'Produk berhasil dihapus');

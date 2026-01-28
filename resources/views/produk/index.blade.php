@@ -11,7 +11,19 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bx bx-check-circle me-2"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bx bx-error-circle me-2"></i>
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     @endif
 
     <div class="card">
@@ -22,13 +34,20 @@
                         <th>Nama Produk</th>
                         <th>Stok</th>
                         <th>Harga (per pcs)</th>
-                        <th width="120">Aksi</th>
+                        <th width="150">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($produks as $produk)
                     <tr>
-                        <td>{{ $produk->nama_produk }}</td>
+                        <td>
+                            {{ $produk->nama_produk }}
+                            @if($produk->detail_produksis_count > 0)
+                                <span class="badge bg-label-info ms-1" title="Digunakan dalam {{ $produk->detail_produksis_count }} produksi">
+                                    <i class="bx bx-box"></i> {{ $produk->detail_produksis_count }}
+                                </span>
+                            @endif
+                        </td>
                         <td>
                             <span class="badge bg-label-primary">
                                 {{ $produk->stok }}
@@ -42,12 +61,19 @@
                             <a href="{{ route('produks.edit', $produk) }}" class="btn btn-sm btn-warning">
                                 <i class="bx bx-edit"></i>
                             </a>
-                            <form action="{{ route('produks.destroy', $produk) }}" method="POST" class="d-inline">
-                                @csrf @method('DELETE')
-                                <button onclick="return confirm('Hapus produk ini?')" class="btn btn-sm btn-danger">
+
+                            @if($produk->detail_produksis_count == 0 && $produk->detail_returs_count == 0)
+                                <form action="{{ route('produks.destroy', $produk) }}" method="POST" class="d-inline">
+                                    @csrf @method('DELETE')
+                                    <button onclick="return confirm('Hapus produk ini?')" class="btn btn-sm btn-danger">
+                                        <i class="bx bx-trash"></i>
+                                    </button>
+                                </form>
+                            @else
+                                <button class="btn btn-sm btn-secondary" disabled title="Tidak dapat dihapus karena sudah digunakan">
                                     <i class="bx bx-trash"></i>
                                 </button>
-                            </form>
+                            @endif
                         </td>
                     </tr>
                     @empty
