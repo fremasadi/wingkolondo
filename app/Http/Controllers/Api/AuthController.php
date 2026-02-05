@@ -36,9 +36,6 @@ class AuthController extends Controller
             );
         }
 
-        // hapus token lama
-        $user->tokens()->delete();
-
         $token = $user->createToken('kurir-token')->plainTextToken;
 
         return response()->json([

@@ -6,13 +6,17 @@ use App\Models\Pesanan;
 use App\Models\Toko;
 use App\Models\DetailPesanan;
 use App\Models\Produk;
+use App\Models\Distribusi;
+use App\Models\User;
+use App\Models\Piutang;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PesananController extends Controller
 {
     public function index()
     {
-        $pesanans = Pesanan::with('toko')->latest()->get();
+        $pesanans = Pesanan::with(['toko', 'distribusi.kurir'])->latest()->get();
         return view('pesanan.index', compact('pesanans'));
     }
 
@@ -60,15 +64,16 @@ class PesananController extends Controller
         // 3. Update total harga
         $pesanan->updateTotalHarga();
 
-        return redirect()->route('pesanans.index')->with('success', 'Pesanan berhasil disimpan');
+        return redirect()->route('pesanans.edit', $pesanan)->with('success', 'Pesanan berhasil disimpan. Silakan tambah distribusi jika diperlukan.');
     }
 
     public function edit(Pesanan $pesanan)
     {
         return view('pesanan.edit', [
-            'pesanan' => $pesanan->load('details.produk'),
+            'pesanan' => $pesanan->load(['details.produk', 'distribusi']),
             'tokos' => Toko::orderBy('nama_toko')->get(),
             'produks' => Produk::orderBy('nama_produk')->get(),
+            'kurirs' => User::where('role', 'kurir')->get(),
         ]);
     }
     public function update(Request $request, Pesanan $pesanan)
@@ -117,5 +122,84 @@ class PesananController extends Controller
         $pesanan->delete();
 
         return redirect()->route('pesanans.index')->with('success', 'Pesanan berhasil dihapus');
+    }
+
+    public function storeDistribusi(Request $request, Pesanan $pesanan)
+    {
+        $request->validate([
+            'kurir_id' => 'nullable|exists:users,id',
+            'tanggal_kirim' => 'required|date',
+        ]);
+
+        Distribusi::create([
+            'pesanan_id' => $pesanan->id,
+            'kurir_id' => $request->kurir_id,
+            'tanggal_kirim' => $request->tanggal_kirim,
+            'status_pengiriman' => 'pending',
+            'catatan' => $request->catatan,
+        ]);
+
+        return redirect()->route('pesanans.edit', $pesanan)->with('success', 'Distribusi berhasil dibuat');
+    }
+
+    public function updateDistribusi(Request $request, Pesanan $pesanan)
+    {
+        $request->validate([
+            'kurir_id' => 'nullable|exists:users,id',
+            'tanggal_kirim' => 'required|date',
+            'status_pengiriman' => 'required',
+        ]);
+
+        $pesanan->distribusi->update($request->only(['kurir_id', 'tanggal_kirim', 'status_pengiriman', 'catatan']));
+
+        return redirect()->route('pesanans.edit', $pesanan)->with('success', 'Distribusi berhasil diperbarui');
+    }
+
+    public function selesaiDistribusi(Pesanan $pesanan)
+    {
+        $distribusi = $pesanan->distribusi;
+
+        if (!$distribusi) {
+            return back()->with('error', 'Distribusi tidak ditemukan');
+        }
+
+        if ($distribusi->status_pengiriman === 'selesai') {
+            return back()->with('success', 'Distribusi sudah selesai');
+        }
+
+        DB::transaction(function () use ($distribusi, $pesanan) {
+            $distribusi->update([
+                'status_pengiriman' => 'selesai',
+            ]);
+
+            if ($pesanan->metode_pembayaran === 'tempo') {
+                Piutang::firstOrCreate(
+                    ['pesanan_id' => $pesanan->id],
+                    [
+                        'toko_id' => $pesanan->toko_id,
+                        'total_tagihan' => $pesanan->total_harga,
+                        'sisa_tagihan' => $pesanan->total_harga,
+                        'status' => 'belum_lunas',
+                    ],
+                );
+            }
+        });
+
+        // Redirect based on referer
+        $referer = request()->headers->get('referer');
+        if (str_contains($referer, 'view=distribusi')) {
+            return redirect()->route('pesanans.index', ['view' => 'distribusi'])->with('success', 'Distribusi selesai & piutang diproses');
+        }
+
+        return redirect()->route('pesanans.edit', $pesanan)->with('success', 'Distribusi selesai & piutang diproses');
+    }
+
+    public function destroyDistribusi(Pesanan $pesanan)
+    {
+        if ($pesanan->distribusi) {
+            $pesanan->distribusi->delete();
+        }
+
+        return redirect()->route('pesanans.edit', $pesanan)->with('success', 'Distribusi berhasil dihapus');
     }
 }
