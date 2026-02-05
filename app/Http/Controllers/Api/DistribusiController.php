@@ -12,6 +12,13 @@ class DistribusiController extends Controller
     {
         $kurir = $request->user();
 
+        // keamanan: pastikan kurir
+        if ($kurir->role !== 'kurir') {
+            return response()->json([
+                'message' => 'Akses ditolak'
+            ], 403);
+        }
+
         $distribusis = Distribusi::with([
                 'pesanan.toko',
                 'pesanan.details.produk'
