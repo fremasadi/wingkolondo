@@ -23,7 +23,9 @@ class TokoController extends Controller
         $request->validate([
             'nama_toko' => 'required',
             'alamat' => 'required',
-            'no_hp' => 'nullable'
+            'no_hp' => 'nullable',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         Toko::create($request->all());
@@ -42,7 +44,9 @@ class TokoController extends Controller
         $request->validate([
             'nama_toko' => 'required',
             'alamat' => 'required',
-            'no_hp' => 'nullable'
+            'no_hp' => 'nullable',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         $toko->update($request->all());

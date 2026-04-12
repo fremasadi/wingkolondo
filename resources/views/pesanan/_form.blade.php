@@ -22,6 +22,7 @@
     <div class="col-md-4 mb-3">
         <label class="form-label">Tanggal Kirim</label>
         <input type="date" name="tanggal_kirim" class="form-control"
+            min="{{ old('tanggal_pesanan', $pesanan->tanggal_pesanan ?? now()->toDateString()) }}"
             value="{{ old('tanggal_kirim', $pesanan->tanggal_kirim ?? '') }}">
     </div>
 
@@ -134,20 +135,86 @@
 </template>
 
 <script>
-document.getElementById('btn-tambah-item').addEventListener('click', function () {
-    var template = document.getElementById('template-item');
-    var clone = template.content.cloneNode(true);
-    document.querySelector('#tabel-item tbody').appendChild(clone);
-});
+document.addEventListener('DOMContentLoaded', function () {
+    var btnTambahItem = document.getElementById('btn-tambah-item');
+    var tabelItem = document.getElementById('tabel-item');
+    var tanggalPesanan = document.querySelector('input[name="tanggal_pesanan"]');
+    var tanggalKirim = document.querySelector('input[name="tanggal_kirim"]');
+    var formPesanan = btnTambahItem ? btnTambahItem.closest('form') : null;
 
-document.getElementById('tabel-item').addEventListener('click', function (e) {
-    var btn = e.target.closest('.btn-hapus-item');
-    if (!btn) return;
-    var rows = this.querySelectorAll('tbody tr');
-    if (rows.length <= 1) {
-        alert('Minimal harus ada 1 item produk');
-        return;
+    function showAlert(icon, title, text) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: icon,
+                title: title,
+                text: text,
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+
+        alert(text);
     }
-    btn.closest('tr').remove();
+
+    function syncTanggalKirimMin() {
+        if (!tanggalPesanan || !tanggalKirim) {
+            return true;
+        }
+
+        var tanggalPesanValue = tanggalPesanan.value;
+        tanggalKirim.min = tanggalPesanValue;
+
+        if (tanggalKirim.value && tanggalKirim.value < tanggalPesanValue) {
+            tanggalKirim.value = '';
+            showAlert('warning', 'Tanggal kirim tidak valid', 'Tanggal kirim tidak boleh sebelum tanggal pesanan.');
+            tanggalKirim.focus();
+            return false;
+        }
+
+        return true;
+    }
+
+    if (btnTambahItem) {
+        btnTambahItem.addEventListener('click', function () {
+            var template = document.getElementById('template-item');
+            var clone = template.content.cloneNode(true);
+            document.querySelector('#tabel-item tbody').appendChild(clone);
+        });
+    }
+
+    if (tabelItem) {
+        tabelItem.addEventListener('click', function (e) {
+            var btn = e.target.closest('.btn-hapus-item');
+            if (!btn) return;
+
+            var rows = this.querySelectorAll('tbody tr');
+            if (rows.length <= 1) {
+                showAlert('warning', 'Item produk kurang', 'Minimal harus ada 1 item produk.');
+                return;
+            }
+
+            btn.closest('tr').remove();
+        });
+    }
+
+    if (tanggalPesanan) {
+        tanggalPesanan.addEventListener('change', syncTanggalKirimMin);
+    }
+
+    if (tanggalKirim) {
+        tanggalKirim.addEventListener('change', function () {
+            syncTanggalKirimMin();
+        });
+    }
+
+    if (formPesanan) {
+        formPesanan.addEventListener('submit', function (e) {
+            if (!syncTanggalKirimMin()) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    syncTanggalKirimMin();
 });
 </script>

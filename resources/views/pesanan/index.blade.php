@@ -19,6 +19,9 @@
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
 
     <div class="card">
         <div class="table-responsive">
@@ -52,17 +55,17 @@
                             <td>{{ $pesanan->toko->nama_toko }}</td>
                             <td>{{ $pesanan->distribusi->kurir->name ?? '-' }}</td>
                             <td>
-                                <span class="badge bg-label-{{ $pesanan->distribusi->status_pengiriman == 'selesai' ? 'success' : 'warning' }}">
+                                <span class="badge bg-label-{{ $pesanan->distribusi->status_pengiriman == 'selesai' ? 'success' : ($pesanan->distribusi->status_pengiriman == 'terkirim' ? 'primary' : 'warning') }}">
                                     {{ ucfirst($pesanan->distribusi->status_pengiriman) }}
                                 </span>
                             </td>
                             <td>
-                                @if($pesanan->distribusi->status_pengiriman !== 'selesai')
+                                @if($pesanan->distribusi->status_pengiriman === 'terkirim')
                                     <form action="{{ route('pesanans.distribusi.selesai', $pesanan) }}"
                                           method="POST" class="d-inline">
                                         @csrf @method('PATCH')
                                         <button class="btn btn-sm btn-success"
-                                                onclick="return confirm('Tandai distribusi selesai?')">
+                                                onclick="return confirm('ACC distribusi ini sebagai selesai?')">
                                             <i class="bx bx-check"></i>
                                         </button>
                                     </form>
@@ -90,7 +93,7 @@
                             </td>
                             <td>
                                 @if($pesanan->distribusi)
-                                    <span class="badge bg-label-{{ $pesanan->distribusi->status_pengiriman == 'selesai' ? 'success' : 'warning' }}">
+                                    <span class="badge bg-label-{{ $pesanan->distribusi->status_pengiriman == 'selesai' ? 'success' : ($pesanan->distribusi->status_pengiriman == 'terkirim' ? 'primary' : 'warning') }}">
                                         {{ ucfirst($pesanan->distribusi->status_pengiriman) }}
                                     </span>
                                 @else

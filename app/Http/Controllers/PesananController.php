@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pesanan;
-use App\Models\Toko;
 use App\Models\DetailPesanan;
-use App\Models\Produk;
 use App\Models\Distribusi;
-use App\Models\User;
+use App\Models\Pesanan;
 use App\Models\Piutang;
+use App\Models\Produk;
+use App\Models\Toko;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -17,6 +17,7 @@ class PesananController extends Controller
     public function index()
     {
         $pesanans = Pesanan::with(['toko', 'distribusi.kurir'])->latest()->get();
+
         return view('pesanan.index', compact('pesanans'));
     }
 
@@ -33,10 +34,13 @@ class PesananController extends Controller
         $request->validate([
             'toko_id' => 'required|exists:tokos,id',
             'tanggal_pesanan' => 'required|date',
+            'tanggal_kirim' => 'nullable|date|after_or_equal:tanggal_pesanan',
             'produk_id.*' => 'required|exists:produks,id',
             'qty.*' => 'required|integer|min:1',
-            'metode_pembayaran' => 'required|in:cash,transfer,tempo'
+            'metode_pembayaran' => 'required|in:cash,transfer,tempo',
 
+        ], [
+            'tanggal_kirim.after_or_equal' => 'Tanggal kirim tidak boleh sebelum tanggal pesanan.',
         ]);
 
         // 1. Simpan header pesanan
@@ -76,13 +80,17 @@ class PesananController extends Controller
             'kurirs' => User::where('role', 'kurir')->get(),
         ]);
     }
+
     public function update(Request $request, Pesanan $pesanan)
     {
         $request->validate([
             'toko_id' => 'required',
             'tanggal_pesanan' => 'required|date',
+            'tanggal_kirim' => 'nullable|date|after_or_equal:tanggal_pesanan',
             'produk_id.*' => 'required|exists:produks,id',
             'qty.*' => 'required|integer|min:1',
+        ], [
+            'tanggal_kirim.after_or_equal' => 'Tanggal kirim tidak boleh sebelum tanggal pesanan.',
         ]);
 
         // Update header
@@ -91,6 +99,12 @@ class PesananController extends Controller
             'tanggal_pesanan' => $request->tanggal_pesanan,
             'tanggal_kirim' => $request->tanggal_kirim,
         ]);
+
+        if ($pesanan->distribusi) {
+            $pesanan->distribusi->update([
+                'tanggal_kirim' => $request->tanggal_kirim,
+            ]);
+        }
 
         // Hapus detail lama
         $pesanan->details()->delete();
@@ -110,12 +124,12 @@ class PesananController extends Controller
 
         $pesanan->updateTotalHarga();
 
-        return redirect()->route('pesanans.index')->with('success', 'Pesanan berhasil diperbarui');
+        return redirect()->route('pesanans.edit', $pesanan)->with('success', 'Pesanan berhasil diperbarui');
     }
 
     public function destroy(Pesanan $pesanan)
     {
-        if (!$pesanan->isEditable()) {
+        if (! $pesanan->isEditable()) {
             return redirect()->back()->with('error', 'Pesanan tidak bisa dihapus');
         }
 
@@ -128,13 +142,12 @@ class PesananController extends Controller
     {
         $request->validate([
             'kurir_id' => 'nullable|exists:users,id',
-            'tanggal_kirim' => 'required|date',
         ]);
 
         Distribusi::create([
             'pesanan_id' => $pesanan->id,
             'kurir_id' => $request->kurir_id,
-            'tanggal_kirim' => $request->tanggal_kirim,
+            'tanggal_kirim' => $pesanan->tanggal_kirim,
             'status_pengiriman' => 'pending',
             'catatan' => $request->catatan,
         ]);
@@ -146,11 +159,15 @@ class PesananController extends Controller
     {
         $request->validate([
             'kurir_id' => 'nullable|exists:users,id',
-            'tanggal_kirim' => 'required|date',
-            'status_pengiriman' => 'required',
+            'status_pengiriman' => 'required|in:pending,dikirim,terkirim,retur',
         ]);
 
-        $pesanan->distribusi->update($request->only(['kurir_id', 'tanggal_kirim', 'status_pengiriman', 'catatan']));
+        $pesanan->distribusi->update([
+            'kurir_id' => $request->kurir_id,
+            'tanggal_kirim' => $pesanan->tanggal_kirim,
+            'status_pengiriman' => $request->status_pengiriman,
+            'catatan' => $request->catatan,
+        ]);
 
         return redirect()->route('pesanans.edit', $pesanan)->with('success', 'Distribusi berhasil diperbarui');
     }
@@ -159,7 +176,7 @@ class PesananController extends Controller
     {
         $distribusi = $pesanan->distribusi;
 
-        if (!$distribusi) {
+        if (! $distribusi) {
             return back()->with('error', 'Distribusi tidak ditemukan');
         }
 
@@ -167,9 +184,15 @@ class PesananController extends Controller
             return back()->with('success', 'Distribusi sudah selesai');
         }
 
+        if ($distribusi->status_pengiriman !== 'terkirim') {
+            return back()->with('error', 'Distribusi belum dikonfirmasi kurir. Status harus terkirim sebelum diselesaikan admin.');
+        }
+
         DB::transaction(function () use ($distribusi, $pesanan) {
             $distribusi->update([
                 'status_pengiriman' => 'selesai',
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
             ]);
 
             if ($pesanan->metode_pembayaran === 'tempo') {

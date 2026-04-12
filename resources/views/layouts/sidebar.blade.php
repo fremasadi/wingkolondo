@@ -59,10 +59,10 @@
             <span class="menu-header-text">Transaksi</span>
         </li>
 
-        <li class="menu-item {{ request()->routeIs('pesanans.*') && request()->query('view') != 'distribusi' ? 'active' : '' }}">
+        <li class="menu-item {{ request()->routeIs('pesanans.*') || request()->routeIs('distribusis.*') || request()->query('view') == 'distribusi' ? 'active' : '' }}">
             <a href="{{ route('pesanans.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-cart"></i>
-                <div>Pesanan</div>
+                <div>Pesanan & Distribusi</div>
             </a>
         </li>
 
@@ -72,13 +72,6 @@
                 <div>Produksi</div>
             </a>
         </li>
-
-        {{-- <li class="menu-item {{ request()->query('view') == 'distribusi' ? 'active' : '' }}">
-            <a href="{{ route('pesanans.index', ['view' => 'distribusi']) }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-send"></i>
-                <div>Distribusi</div>
-            </a>
-        </li> --}}
 
         <li class="menu-item {{ request()->routeIs('returs.*') ? 'active' : '' }}">
             <a href="{{ route('returs.index') }}" class="menu-link">

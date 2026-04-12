@@ -13,7 +13,7 @@ class DistribusiController extends Controller
 {
     public function index()
     {
-        $distribusis = Distribusi::with(['pesanan.toko', 'kurir'])
+        $distribusis = Distribusi::with(['pesanan.toko', 'kurir', 'approver'])
             ->latest()
             ->get();
 
@@ -35,13 +35,14 @@ class DistribusiController extends Controller
         $request->validate([
             'pesanan_id' => 'required|exists:pesanans,id',
             'kurir_id' => 'nullable|exists:users,id',
-            'tanggal_kirim' => 'required|date',
         ]);
+
+        $pesanan = Pesanan::findOrFail($request->pesanan_id);
 
         Distribusi::create([
             'pesanan_id' => $request->pesanan_id,
             'kurir_id' => $request->kurir_id,
-            'tanggal_kirim' => $request->tanggal_kirim,
+            'tanggal_kirim' => $pesanan->tanggal_kirim,
             'status_pengiriman' => 'pending',
             'catatan' => $request->catatan,
         ]);
@@ -61,11 +62,15 @@ class DistribusiController extends Controller
     {
         $request->validate([
             'kurir_id' => 'nullable|exists:users,id',
-            'tanggal_kirim' => 'required|date',
-            'status_pengiriman' => 'required',
+            'status_pengiriman' => 'required|in:pending,dikirim,terkirim,retur',
         ]);
 
-        $distribusi->update($request->only(['kurir_id', 'tanggal_kirim', 'status_pengiriman', 'catatan']));
+        $distribusi->update([
+            'kurir_id' => $request->kurir_id,
+            'tanggal_kirim' => $distribusi->pesanan->tanggal_kirim,
+            'status_pengiriman' => $request->status_pengiriman,
+            'catatan' => $request->catatan,
+        ]);
 
         return redirect()->route('distribusis.index')->with('success', 'Distribusi berhasil diperbarui');
     }
@@ -84,10 +89,16 @@ class DistribusiController extends Controller
             return back()->with('success', 'Distribusi sudah selesai');
         }
 
+        if ($distribusi->status_pengiriman !== 'terkirim') {
+            return back()->with('error', 'Distribusi belum dikonfirmasi kurir. Status harus terkirim sebelum diselesaikan admin.');
+        }
+
         DB::transaction(function () use ($distribusi) {
             // update status distribusi
             $distribusi->update([
                 'status_pengiriman' => 'selesai',
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
             ]);
 
             $pesanan = $distribusi->pesanan;

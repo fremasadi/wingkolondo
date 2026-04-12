@@ -10,6 +10,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/distribusi', [DistribusiController::class, 'index']);
+    Route::post('/distribusi/{distribusi}/confirm-delivered', [DistribusiController::class, 'confirmDelivered']);
 
     //Logout
     Route::post('/logout', [AuthController::class, 'logout']);

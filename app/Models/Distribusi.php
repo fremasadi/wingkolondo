@@ -11,7 +11,20 @@ class Distribusi extends Model
         'kurir_id',
         'tanggal_kirim',
         'status_pengiriman',
-        'catatan'
+        'catatan',
+        'delivered_at',
+        'delivery_latitude',
+        'delivery_longitude',
+        'delivery_photo',
+        'delivery_note',
+        'approved_by',
+        'approved_at',
+    ];
+
+    protected $casts = [
+        'tanggal_kirim' => 'date',
+        'delivered_at' => 'datetime',
+        'approved_at' => 'datetime',
     ];
 
     /*
@@ -33,7 +46,12 @@ class Distribusi extends Model
     }
 
     public function retur()
-{
-    return $this->hasOne(Retur::class);
-}
+    {
+        return $this->hasOne(Retur::class);
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
 }

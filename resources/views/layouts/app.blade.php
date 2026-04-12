@@ -50,6 +50,7 @@
 <script src="{{ asset('sneat-1.0.0/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js') }}"></script>
 <script src="{{ asset('sneat-1.0.0/assets/vendor/js/menu.js') }}"></script>
 <script src="{{ asset('sneat-1.0.0/assets/js/main.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <!-- Script tambahan untuk memastikan menu toggle berfungsi -->
 <script>
@@ -65,6 +66,45 @@
         });
     });
 </script>
+
+@if(session('success'))
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: @json(session('success')),
+            confirmButtonText: 'OK'
+        });
+    });
+</script>
+@endif
+
+@if(session('error'))
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: @json(session('error')),
+            confirmButtonText: 'OK'
+        });
+    });
+</script>
+@endif
+
+@if($errors->any())
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validasi gagal',
+            text: @json($errors->first()),
+            confirmButtonText: 'OK'
+        });
+    });
+</script>
+@endif
 
 </body>
 </html>

@@ -9,6 +9,8 @@ class Toko extends Model
     protected $fillable = [
         'nama_toko',
         'alamat',
-        'no_hp'
+        'no_hp',
+        'latitude',
+        'longitude',
     ];
 }
