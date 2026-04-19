@@ -23,8 +23,15 @@ class DistribusiController extends Controller
 
         $startDate = Carbon::parse($request->query('start_date', Carbon::today()->toDateString()))->toDateString();
         $endDate = Carbon::parse($request->query('end_date', $startDate))->toDateString();
+        $status = $request->query('status');
         $perPage = (int) $request->query('per_page', 10);
         $perPage = max(1, min($perPage, 100));
+
+        if ($status !== null && ! in_array($status, ['pending', 'dikirim', 'selesai'], true)) {
+            return response()->json([
+                'message' => 'Status distribusi tidak valid. Gunakan pending, dikirim, atau selesai.',
+            ], 422);
+        }
 
         $distribusis = Distribusi::with([
                 'pesanan.toko',
@@ -34,6 +41,7 @@ class DistribusiController extends Controller
             ->where('kurir_id', $kurir->id)
             ->whereDate('tanggal_kirim', '>=', $startDate)
             ->whereDate('tanggal_kirim', '<=', $endDate)
+            ->when($status, fn ($query) => $query->where('status_pengiriman', $status))
             ->orderBy('tanggal_kirim', 'desc')
             ->paginate($perPage)
             ->through(function ($d) {
@@ -85,6 +93,7 @@ class DistribusiController extends Controller
             'filter' => [
                 'start_date' => $startDate,
                 'end_date' => $endDate,
+                'status' => $status,
                 'per_page' => $distribusis->perPage(),
             ],
             'pagination' => [

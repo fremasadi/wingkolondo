@@ -19,6 +19,7 @@
                         <th>Toko</th>
                         <th>Pesanan</th>
                         <th>Total</th>
+                        <th>Total Dibayar</th>
                         <th>Sisa</th>
                         <th>Jatuh Tempo</th>
                         <th>Status</th>
@@ -31,6 +32,7 @@
                         <td>{{ $p->toko->nama_toko }}</td>
                         <td>#{{ $p->pesanan_id }}</td>
                         <td>Rp {{ number_format($p->total_tagihan) }}</td>
+                        <td>Rp {{ number_format($p->total_tagihan - $p->sisa_tagihan) }}</td>
                         <td>Rp {{ number_format($p->sisa_tagihan) }}</td>
                         <td>{{ $p->jatuh_tempo ?? '-' }}</td>
                         <td>
@@ -49,7 +51,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center">
+                        <td colspan="8" class="text-center">
                             Data piutang kosong
                         </td>
                     </tr>
