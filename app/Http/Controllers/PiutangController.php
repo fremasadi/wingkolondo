@@ -21,15 +21,17 @@ class PiutangController extends Controller
     public function update(Request $request, Piutang $piutang)
     {
         $request->validate([
-            'sisa_tagihan' => 'required|numeric|min:0'
+            'total_dibayar' => 'required|numeric|min:0|max:' . $piutang->total_tagihan
         ]);
 
-        $status = $request->sisa_tagihan == 0
+        $sisaTagihan = $piutang->total_tagihan - $request->total_dibayar;
+
+        $status = $sisaTagihan == 0
             ? 'lunas'
             : 'belum_lunas';
 
         $piutang->update([
-            'sisa_tagihan' => $request->sisa_tagihan,
+            'sisa_tagihan' => $sisaTagihan,
             'status' => $status
         ]);
 

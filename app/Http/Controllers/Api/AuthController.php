@@ -26,15 +26,15 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
-        // // 🔒 Batasi khusus kurir
-        // if ($user->role !== 'kurir') {
-        //     return response()->json(
-        //         [
-        //             'message' => 'Akses hanya untuk kurir',
-        //         ],
-        //         403,
-        //     );
-        // }
+        // 🔒 Batasi khusus kurir
+        if ($user->role !== 'kurir') {
+            return response()->json(
+                [
+                    'message' => 'Akses hanya untuk kurir',
+                ],
+                403,
+            );
+        }
 
         $token = $user->createToken('kurir-token')->plainTextToken;
 
