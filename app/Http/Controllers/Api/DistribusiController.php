@@ -53,6 +53,7 @@ class DistribusiController extends Controller
                     ],
                     'pesanan' => [
                         'id' => $d->pesanan->id,
+                        'order_code' => $d->pesanan->order_code,
                         'tanggal_pesanan' => $d->pesanan->tanggal_pesanan,
                         'total_harga' => $d->pesanan->total_harga,
                         'metode_pembayaran' => $d->pesanan->metode_pembayaran,

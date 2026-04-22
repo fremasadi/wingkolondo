@@ -62,7 +62,7 @@ class DistribusiController extends Controller
     {
         $request->validate([
             'kurir_id' => 'nullable|exists:users,id',
-            'status_pengiriman' => 'required|in:pending,dikirim,terkirim,retur',
+            'status_pengiriman' => 'required|in:pending,dikirim,terkirim,selesai',
         ]);
 
         $distribusi->update([

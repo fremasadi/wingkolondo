@@ -21,6 +21,10 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 
 
 Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
     Route::resource('users', UserController::class);
     Route::resource('tokos', TokoController::class);
     Route::resource('bahan-bakus', BahanBakuController::class);
@@ -33,6 +37,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('pesanans/{pesanan}/distribusi/selesai', [PesananController::class, 'selesaiDistribusi'])->name('pesanans.distribusi.selesai');
     Route::delete('pesanans/{pesanan}/distribusi', [PesananController::class, 'destroyDistribusi'])->name('pesanans.distribusi.destroy');
     Route::resource('returs', ReturController::class)->except(['edit', 'update', 'destroy']);
+    Route::patch('returs/{retur}/approve', [ReturController::class, 'approve'])->name('returs.approve');
 
     Route::resource('piutangs', PiutangController::class)
     ->only(['index','edit','update']);

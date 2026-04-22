@@ -22,11 +22,13 @@ return new class extends Migration
             $table->timestamp('approved_at')->nullable()->after('approved_by');
         });
 
-        DB::statement("
-            ALTER TABLE distribusis
-            MODIFY status_pengiriman ENUM('pending', 'dikirim', 'terkirim', 'selesai', 'retur')
-            NOT NULL DEFAULT 'pending'
-        ");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("
+                ALTER TABLE distribusis
+                MODIFY status_pengiriman ENUM('pending', 'dikirim', 'terkirim', 'selesai', 'retur')
+                NOT NULL DEFAULT 'pending'
+            ");
+        }
     }
 
     /**
@@ -34,11 +36,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("
-            ALTER TABLE distribusis
-            MODIFY status_pengiriman ENUM('pending', 'dikirim', 'selesai', 'retur')
-            NOT NULL DEFAULT 'pending'
-        ");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("
+                ALTER TABLE distribusis
+                MODIFY status_pengiriman ENUM('pending', 'dikirim', 'selesai', 'retur')
+                NOT NULL DEFAULT 'pending'
+            ");
+        }
 
         Schema::table('distribusis', function (Blueprint $table) {
             $table->dropConstrainedForeignId('approved_by');

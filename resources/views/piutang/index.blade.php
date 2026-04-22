@@ -29,7 +29,7 @@
                     @forelse($piutangs as $p)
                     <tr>
                         <td>{{ $p->toko->nama_toko }}</td>
-                        <td>#{{ $p->pesanan_id }}</td>
+                        <td>{{ $p->pesanan->order_code ?? '#' . $p->pesanan_id }}</td>
                         <td>Rp {{ number_format($p->total_tagihan) }}</td>
                         <td>Rp {{ number_format($p->sisa_tagihan) }}</td>
                         <td>{{ $p->jatuh_tempo ?? '-' }}</td>

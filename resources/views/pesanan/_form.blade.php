@@ -1,5 +1,12 @@
 <div class="row">
 
+    @isset($pesanan)
+    <div class="col-md-4 mb-3">
+        <label class="form-label">Order ID</label>
+        <input type="text" class="form-control" value="{{ $pesanan->order_code ?? '#' . $pesanan->id }}" readonly>
+    </div>
+    @endisset
+
     <div class="col-md-4 mb-3">
         <label class="form-label">Toko</label>
         <select name="toko_id" class="form-select" required>

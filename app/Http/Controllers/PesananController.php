@@ -49,6 +49,7 @@ class PesananController extends Controller
             'tanggal_pesanan' => $request->tanggal_pesanan,
             'tanggal_kirim' => $request->tanggal_kirim,
             'status_pesanan' => 'diproses',
+            'metode_pembayaran' => $request->metode_pembayaran,
             'total_harga' => 0,
         ]);
 
@@ -89,6 +90,8 @@ class PesananController extends Controller
             'tanggal_kirim' => 'nullable|date|after_or_equal:tanggal_pesanan',
             'produk_id.*' => 'required|exists:produks,id',
             'qty.*' => 'required|integer|min:1',
+            'metode_pembayaran' => 'required|in:cash,transfer,tempo',
+            'status_pesanan' => 'required|in:draft,dikonfirmasi,diproses,dikirim,selesai,batal',
         ], [
             'tanggal_kirim.after_or_equal' => 'Tanggal kirim tidak boleh sebelum tanggal pesanan.',
         ]);
@@ -98,6 +101,8 @@ class PesananController extends Controller
             'toko_id' => $request->toko_id,
             'tanggal_pesanan' => $request->tanggal_pesanan,
             'tanggal_kirim' => $request->tanggal_kirim,
+            'status_pesanan' => $request->status_pesanan,
+            'metode_pembayaran' => $request->metode_pembayaran,
         ]);
 
         if ($pesanan->distribusi) {
@@ -159,7 +164,7 @@ class PesananController extends Controller
     {
         $request->validate([
             'kurir_id' => 'nullable|exists:users,id',
-            'status_pengiriman' => 'required|in:pending,dikirim,terkirim,retur',
+            'status_pengiriman' => 'required|in:pending,dikirim,terkirim,selesai',
         ]);
 
         $pesanan->distribusi->update([

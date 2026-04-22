@@ -58,14 +58,19 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Status Pengiriman</label>
-                            <select name="status_pengiriman" class="form-select">
-                                @foreach(['pending','dikirim','terkirim','retur'] as $status)
-                                    <option value="{{ $status }}"
-                                        {{ $pesanan->distribusi->status_pengiriman == $status ? 'selected' : '' }}>
-                                        {{ ucfirst($status) }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            @if($pesanan->distribusi->status_pengiriman === 'selesai')
+                                <input type="hidden" name="status_pengiriman" value="selesai">
+                                <input type="text" class="form-control" value="Selesai" readonly>
+                            @else
+                                <select name="status_pengiriman" class="form-select">
+                                    @foreach(['pending','dikirim','terkirim'] as $status)
+                                        <option value="{{ $status }}"
+                                            {{ $pesanan->distribusi->status_pengiriman == $status ? 'selected' : '' }}>
+                                            {{ ucfirst($status) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            @endif
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Catatan</label>

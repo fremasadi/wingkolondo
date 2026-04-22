@@ -4,10 +4,30 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\DetailPesanan;
+use Illuminate\Support\Str;
 
 class Pesanan extends Model
 {
-    protected $fillable = ['toko_id', 'tanggal_pesanan', 'tanggal_kirim', 'status_pesanan','metode_pembayaran', 'total_harga'];
+    protected $fillable = ['order_code', 'toko_id', 'tanggal_pesanan', 'tanggal_kirim', 'status_pesanan','metode_pembayaran', 'total_harga'];
+
+    protected static function booted()
+    {
+        static::creating(function (Pesanan $pesanan) {
+            if ($pesanan->order_code) {
+                return;
+            }
+
+            do {
+                $date = $pesanan->tanggal_pesanan
+                    ? date('Ymd', strtotime($pesanan->tanggal_pesanan))
+                    : date('Ymd');
+
+                $orderCode = 'WL-' . $date . '-' . Str::upper(Str::random(6));
+            } while (static::where('order_code', $orderCode)->exists());
+
+            $pesanan->order_code = $orderCode;
+        });
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -56,5 +76,10 @@ class Pesanan extends Model
     public function distribusi()
     {
         return $this->hasOne(Distribusi::class);
+    }
+
+    public function returs()
+    {
+        return $this->hasManyThrough(Retur::class, Distribusi::class);
     }
 }

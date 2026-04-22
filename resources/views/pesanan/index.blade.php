@@ -29,12 +29,14 @@
                 <thead>
                     <tr>
                         @if($isDistribusiView)
+                            <th>Order</th>
                             <th>Tgl Kirim</th>
                             <th>Toko</th>
                             <th>Kurir</th>
                             <th>Status</th>
                             <th width="150">Aksi</th>
                         @else
+                            <th>Order</th>
                             <th>Tanggal</th>
                             <th>Toko</th>
                             <th>Status</th>
@@ -51,6 +53,7 @@
                         @endphp
                         @forelse($distribusiPesanans as $pesanan)
                         <tr>
+                            <td><strong>{{ $pesanan->order_code ?? '#' . $pesanan->id }}</strong></td>
                             <td>{{ $pesanan->distribusi->tanggal_kirim }}</td>
                             <td>{{ $pesanan->toko->nama_toko }}</td>
                             <td>{{ $pesanan->distribusi->kurir->name ?? '-' }}</td>
@@ -78,12 +81,13 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center">Belum ada distribusi</td>
+                            <td colspan="6" class="text-center">Belum ada distribusi</td>
                         </tr>
                         @endforelse
                     @else
                         @forelse($pesanans as $pesanan)
                         <tr>
+                            <td><strong>{{ $pesanan->order_code ?? '#' . $pesanan->id }}</strong></td>
                             <td>{{ $pesanan->tanggal_pesanan }}</td>
                             <td>{{ $pesanan->toko->nama_toko }}</td>
                             <td>
@@ -118,7 +122,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center">Data pesanan kosong</td>
+                            <td colspan="7" class="text-center">Data pesanan kosong</td>
                         </tr>
                         @endforelse
                     @endif

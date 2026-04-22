@@ -10,6 +10,7 @@ class DetailRetur extends Model
         'retur_id',
         'produk_id',
         'qty',
+        'kondisi',
         'harga',
         'subtotal'
     ];
