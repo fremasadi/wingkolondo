@@ -13,13 +13,22 @@ class OmzetController extends Controller
         $mulai = $request->mulai;
         $sampai = $request->sampai;
 
-        // Pesanan langsung bayar
-        $cash = Pesanan::whereIn('metode_pembayaran', ['cash','transfer'])
+        // Pesanan langsung bayar dihitung net setelah retur selesai.
+        $cashOrders = Pesanan::whereIn('metode_pembayaran', ['cash','transfer'])
             ->when($mulai, fn($q) => $q->whereDate('tanggal_pesanan', '>=', $mulai))
             ->when($sampai, fn($q) => $q->whereDate('tanggal_pesanan', '<=', $sampai))
-            ->sum('total_harga');
+            ->withSum([
+                'returs as retur_selesai_total' => fn ($query) => $query->where('status', 'selesai'),
+            ], 'total_refund')
+            ->get();
 
-        // Piutang lunas
+        $cash = $cashOrders->sum(function (Pesanan $pesanan) {
+            $netto = (float) $pesanan->total_harga - (float) ($pesanan->retur_selesai_total ?? 0);
+
+            return max(0, $netto);
+        });
+
+        // Piutang lunas otomatis ikut net karena total_tagihan dikurangi saat retur selesai.
         $tempo = Piutang::where('status', 'lunas')
             ->when($mulai, fn($q) => $q->whereDate('updated_at', '>=', $mulai))
             ->when($sampai, fn($q) => $q->whereDate('updated_at', '<=', $sampai))

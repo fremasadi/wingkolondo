@@ -82,4 +82,9 @@ class Pesanan extends Model
     {
         return $this->hasManyThrough(Retur::class, Distribusi::class);
     }
+
+    public function piutang()
+    {
+        return $this->hasOne(Piutang::class);
+    }
 }

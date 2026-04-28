@@ -54,4 +54,15 @@ class Distribusi extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+
+    public function markAsRetur(): void
+    {
+        if ($this->status_pengiriman === 'retur') {
+            return;
+        }
+
+        $this->update([
+            'status_pengiriman' => 'retur',
+        ]);
+    }
 }

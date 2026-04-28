@@ -12,6 +12,7 @@ use App\Http\Controllers\ProduksiController;
 use App\Http\Controllers\PiutangController;
 use App\Http\Controllers\OmzetController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LaporanKeuanganController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -44,6 +45,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/omzet', [OmzetController::class, 'index'])
     ->name('omzet.index');
+
+    Route::get('laporan-keuangan', [LaporanKeuanganController::class, 'index'])
+        ->name('laporan-keuangan.index');
+    Route::get('laporan-keuangan/print', [LaporanKeuanganController::class, 'print'])
+        ->name('laporan-keuangan.print');
 });
 
 require __DIR__ . '/auth.php';

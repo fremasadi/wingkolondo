@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Retur;
 use App\Models\Distribusi;
 use App\Models\DetailRetur;
-use App\Models\Piutang;
 use App\Models\User;
 
 class ReturController extends Controller
@@ -123,31 +122,7 @@ class ReturController extends Controller
             return back()->with('error', 'Retur belum dikonfirmasi pickup oleh kurir.');
         }
 
-        DB::transaction(function () use ($retur) {
-            $retur->load('distribusi.pesanan');
-            $pesanan = $retur->distribusi->pesanan;
-
-            if ($retur->refund_method === 'potong_piutang') {
-                $piutang = Piutang::where('pesanan_id', $pesanan->id)->first();
-
-                if ($piutang) {
-                    $sisaTagihan = max(0, $piutang->sisa_tagihan - $retur->total_refund);
-                    $totalTagihan = max(0, $piutang->total_tagihan - $retur->total_refund);
-
-                    $piutang->update([
-                        'total_tagihan' => $totalTagihan,
-                        'sisa_tagihan' => $sisaTagihan,
-                        'status' => $sisaTagihan == 0 ? 'lunas' : 'belum_lunas',
-                    ]);
-                }
-            }
-
-            $retur->update([
-                'status' => 'selesai',
-                'approved_by' => auth()->id(),
-                'approved_at' => now(),
-            ]);
-        });
+        $retur->complete(auth()->id());
 
         return redirect()->route('returs.show', $retur)->with('success', 'Retur selesai dan refund sudah diproses');
     }

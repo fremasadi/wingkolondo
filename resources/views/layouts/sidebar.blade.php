@@ -99,6 +99,13 @@
             </a>
         </li>
 
+        <li class="menu-item {{ request()->routeIs('laporan-keuangan.*') ? 'active' : '' }}">
+            <a href="{{ route('laporan-keuangan.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-book-content"></i>
+                <div>Laporan Keuangan</div>
+            </a>
+        </li>
+
         <!-- PENGATURAN -->
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">Pengaturan</span>
