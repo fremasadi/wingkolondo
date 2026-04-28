@@ -25,9 +25,13 @@ class ProdukController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge([
+            'stok' => $request->input('stok', 0),
+        ]);
+
         $request->validate([
             'nama_produk' => 'required',
-            'stok' => 'required|integer|min:0',
+            'stok' => 'nullable|integer|min:0',
             'harga' => 'required|numeric|min:0',
         ]);
 
@@ -59,6 +63,16 @@ class ProdukController extends Controller
 
     public function update(Request $request, Produk $produk)
     {
+        $request->merge([
+            'stok' => $request->input('stok', 0),
+        ]);
+
+        $request->validate([
+            'nama_produk' => 'required',
+            'stok' => 'nullable|integer|min:0',
+            'harga' => 'required|numeric|min:0',
+        ]);
+
         DB::transaction(function () use ($request, $produk) {
             $produk->update($request->only('nama_produk', 'stok', 'harga'));
 

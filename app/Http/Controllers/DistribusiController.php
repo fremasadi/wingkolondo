@@ -34,7 +34,12 @@ class DistribusiController extends Controller
     {
         $request->validate([
             'pesanan_id' => 'required|exists:pesanans,id',
-            'kurir_id' => 'nullable|exists:users,id',
+            'kurir_id' => 'required|exists:users,id',
+        ], [
+            'pesanan_id.required' => 'Pesanan wajib dipilih.',
+            'pesanan_id.exists' => 'Pesanan yang dipilih tidak valid.',
+            'kurir_id.required' => 'Kurir wajib dipilih.',
+            'kurir_id.exists' => 'Kurir yang dipilih tidak valid.',
         ]);
 
         $pesanan = Pesanan::findOrFail($request->pesanan_id);
@@ -61,8 +66,14 @@ class DistribusiController extends Controller
     public function update(Request $request, Distribusi $distribusi)
     {
         $request->validate([
-            'kurir_id' => 'nullable|exists:users,id',
+            'kurir_id' => 'required|exists:users,id',
             'status_pengiriman' => 'required|in:pending,dikirim,terkirim,selesai',
+            'catatan' => 'nullable|string',
+        ], [
+            'kurir_id.required' => 'Kurir wajib dipilih.',
+            'kurir_id.exists' => 'Kurir yang dipilih tidak valid.',
+            'status_pengiriman.required' => 'Status pengiriman wajib dipilih.',
+            'status_pengiriman.in' => 'Status pengiriman yang dipilih tidak valid.',
         ]);
 
         $distribusi->update([

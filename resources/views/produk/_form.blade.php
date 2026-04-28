@@ -1,4 +1,6 @@
 <div class="row">
+    <input type="hidden" name="stok" value="{{ old('stok', $produk->stok ?? 0) }}">
+
     <div class="col-md-6 mb-3">
         <label class="form-label">Nama Produk</label>
         <input type="text" name="nama_produk" class="form-control"
