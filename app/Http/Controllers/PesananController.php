@@ -34,7 +34,7 @@ class PesananController extends Controller
         $request->validate([
             'toko_id' => 'required|exists:tokos,id',
             'tanggal_pesanan' => 'required|date',
-            'tanggal_kirim' => 'nullable|date|after_or_equal:tanggal_pesanan',
+            'tanggal_kirim' => 'required|date|after_or_equal:tanggal_pesanan',
             'produk_id' => 'required|array|min:1',
             'produk_id.*' => 'required|exists:produks,id',
             'qty' => 'required|array|min:1',
@@ -46,6 +46,8 @@ class PesananController extends Controller
             'toko_id.exists' => 'Toko yang dipilih tidak valid.',
             'tanggal_pesanan.required' => 'Tanggal pesanan wajib diisi.',
             'tanggal_pesanan.date' => 'Tanggal pesanan tidak valid.',
+            'tanggal_kirim.required' => 'Tanggal kirim wajib diisi.',
+            'tanggal_kirim.date' => 'Tanggal kirim tidak valid.',
             'tanggal_kirim.after_or_equal' => 'Tanggal kirim tidak boleh sebelum tanggal pesanan.',
             'produk_id.required' => 'Minimal harus ada 1 produk.',
             'produk_id.array' => 'Format produk tidak valid.',
@@ -106,7 +108,7 @@ class PesananController extends Controller
         $request->validate([
             'toko_id' => 'required|exists:tokos,id',
             'tanggal_pesanan' => 'required|date',
-            'tanggal_kirim' => 'nullable|date|after_or_equal:tanggal_pesanan',
+            'tanggal_kirim' => 'required|date|after_or_equal:tanggal_pesanan',
             'produk_id' => 'required|array|min:1',
             'produk_id.*' => 'required|exists:produks,id',
             'qty' => 'required|array|min:1',
@@ -118,6 +120,8 @@ class PesananController extends Controller
             'toko_id.exists' => 'Toko yang dipilih tidak valid.',
             'tanggal_pesanan.required' => 'Tanggal pesanan wajib diisi.',
             'tanggal_pesanan.date' => 'Tanggal pesanan tidak valid.',
+            'tanggal_kirim.required' => 'Tanggal kirim wajib diisi.',
+            'tanggal_kirim.date' => 'Tanggal kirim tidak valid.',
             'tanggal_kirim.after_or_equal' => 'Tanggal kirim tidak boleh sebelum tanggal pesanan.',
             'produk_id.required' => 'Minimal harus ada 1 produk.',
             'produk_id.array' => 'Format produk tidak valid.',
@@ -189,6 +193,12 @@ class PesananController extends Controller
             'kurir_id' => 'nullable|exists:users,id',
         ]);
 
+        if (! $pesanan->tanggal_kirim) {
+            return redirect()
+                ->route('pesanans.edit', $pesanan)
+                ->with('error', 'Tanggal kirim pada pesanan wajib diisi sebelum membuat distribusi.');
+        }
+
         Distribusi::create([
             'pesanan_id' => $pesanan->id,
             'kurir_id' => $request->kurir_id,
@@ -206,6 +216,12 @@ class PesananController extends Controller
             'kurir_id' => 'nullable|exists:users,id',
             'status_pengiriman' => 'required|in:pending,dikirim,terkirim,selesai',
         ]);
+
+        if (! $pesanan->tanggal_kirim) {
+            return redirect()
+                ->route('pesanans.edit', $pesanan)
+                ->with('error', 'Tanggal kirim pada pesanan wajib diisi sebelum memperbarui distribusi.');
+        }
 
         $pesanan->distribusi->update([
             'kurir_id' => $request->kurir_id,

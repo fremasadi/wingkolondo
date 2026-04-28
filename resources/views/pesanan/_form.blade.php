@@ -36,9 +36,9 @@
         <label class="form-label">Tanggal Kirim</label>
         <input type="date" name="tanggal_kirim" class="form-control @error('tanggal_kirim') is-invalid @enderror"
             min="{{ old('tanggal_pesanan', $pesanan->tanggal_pesanan ?? now()->toDateString()) }}"
-            value="{{ old('tanggal_kirim', $pesanan->tanggal_kirim ?? '') }}">
+            value="{{ old('tanggal_kirim', $pesanan->tanggal_kirim ?? '') }}" required>
         <div class="invalid-feedback" data-error-for="tanggal_kirim">
-            @error('tanggal_kirim') {{ $message }} @else Tanggal kirim tidak boleh sebelum tanggal pesanan. @enderror
+            @error('tanggal_kirim') {{ $message }} @else Tanggal kirim wajib diisi dan tidak boleh sebelum tanggal pesanan. @enderror
         </div>
     </div>
 
@@ -347,6 +347,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             isValid = validateRequiredField(tokoSelect, 'Silakan pilih toko terlebih dahulu.') && isValid;
             isValid = validateRequiredField(tanggalPesanan, 'Tanggal pesanan wajib diisi.') && isValid;
+            isValid = validateRequiredField(tanggalKirim, 'Tanggal kirim wajib diisi.') && isValid;
             isValid = validateRequiredField(metodePembayaran, 'Silakan pilih metode pembayaran.') && isValid;
             isValid = validateRequiredField(statusPesanan, 'Silakan pilih status pesanan.') && isValid;
             isValid = validateDetailItems() && isValid;
