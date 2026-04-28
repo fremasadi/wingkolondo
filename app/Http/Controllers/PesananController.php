@@ -35,12 +35,31 @@ class PesananController extends Controller
             'toko_id' => 'required|exists:tokos,id',
             'tanggal_pesanan' => 'required|date',
             'tanggal_kirim' => 'nullable|date|after_or_equal:tanggal_pesanan',
+            'produk_id' => 'required|array|min:1',
             'produk_id.*' => 'required|exists:produks,id',
+            'qty' => 'required|array|min:1',
             'qty.*' => 'required|integer|min:1',
             'metode_pembayaran' => 'required|in:cash,transfer,tempo',
 
         ], [
+            'toko_id.required' => 'Toko wajib dipilih.',
+            'toko_id.exists' => 'Toko yang dipilih tidak valid.',
+            'tanggal_pesanan.required' => 'Tanggal pesanan wajib diisi.',
+            'tanggal_pesanan.date' => 'Tanggal pesanan tidak valid.',
             'tanggal_kirim.after_or_equal' => 'Tanggal kirim tidak boleh sebelum tanggal pesanan.',
+            'produk_id.required' => 'Minimal harus ada 1 produk.',
+            'produk_id.array' => 'Format produk tidak valid.',
+            'produk_id.min' => 'Minimal harus ada 1 produk.',
+            'produk_id.*.required' => 'Produk wajib dipilih.',
+            'produk_id.*.exists' => 'Produk yang dipilih tidak valid.',
+            'qty.required' => 'Qty produk wajib diisi.',
+            'qty.array' => 'Format qty produk tidak valid.',
+            'qty.min' => 'Minimal harus ada 1 qty produk.',
+            'qty.*.required' => 'Qty produk wajib diisi.',
+            'qty.*.integer' => 'Qty produk harus berupa angka bulat.',
+            'qty.*.min' => 'Qty produk minimal 1.',
+            'metode_pembayaran.required' => 'Metode pembayaran wajib dipilih.',
+            'metode_pembayaran.in' => 'Metode pembayaran yang dipilih tidak valid.',
         ]);
 
         // 1. Simpan header pesanan
@@ -85,15 +104,36 @@ class PesananController extends Controller
     public function update(Request $request, Pesanan $pesanan)
     {
         $request->validate([
-            'toko_id' => 'required',
+            'toko_id' => 'required|exists:tokos,id',
             'tanggal_pesanan' => 'required|date',
             'tanggal_kirim' => 'nullable|date|after_or_equal:tanggal_pesanan',
+            'produk_id' => 'required|array|min:1',
             'produk_id.*' => 'required|exists:produks,id',
+            'qty' => 'required|array|min:1',
             'qty.*' => 'required|integer|min:1',
             'metode_pembayaran' => 'required|in:cash,transfer,tempo',
             'status_pesanan' => 'required|in:draft,dikonfirmasi,diproses,dikirim,selesai,batal',
         ], [
+            'toko_id.required' => 'Toko wajib dipilih.',
+            'toko_id.exists' => 'Toko yang dipilih tidak valid.',
+            'tanggal_pesanan.required' => 'Tanggal pesanan wajib diisi.',
+            'tanggal_pesanan.date' => 'Tanggal pesanan tidak valid.',
             'tanggal_kirim.after_or_equal' => 'Tanggal kirim tidak boleh sebelum tanggal pesanan.',
+            'produk_id.required' => 'Minimal harus ada 1 produk.',
+            'produk_id.array' => 'Format produk tidak valid.',
+            'produk_id.min' => 'Minimal harus ada 1 produk.',
+            'produk_id.*.required' => 'Produk wajib dipilih.',
+            'produk_id.*.exists' => 'Produk yang dipilih tidak valid.',
+            'qty.required' => 'Qty produk wajib diisi.',
+            'qty.array' => 'Format qty produk tidak valid.',
+            'qty.min' => 'Minimal harus ada 1 qty produk.',
+            'qty.*.required' => 'Qty produk wajib diisi.',
+            'qty.*.integer' => 'Qty produk harus berupa angka bulat.',
+            'qty.*.min' => 'Qty produk minimal 1.',
+            'metode_pembayaran.required' => 'Metode pembayaran wajib dipilih.',
+            'metode_pembayaran.in' => 'Metode pembayaran yang dipilih tidak valid.',
+            'status_pesanan.required' => 'Status pesanan wajib dipilih.',
+            'status_pesanan.in' => 'Status pesanan yang dipilih tidak valid.',
         ]);
 
         // Update header
