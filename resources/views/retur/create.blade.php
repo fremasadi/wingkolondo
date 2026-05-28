@@ -36,7 +36,7 @@
                                 data-items='@json($items)'
                                 data-can-potong-piutang="{{ $canPotongPiutang ? '1' : '0' }}"
                                 data-piutang-status="{{ $piutangStatus ?: 'tidak_ada' }}">
-                                {{ $d->pesanan->order_code ?? '#' . $d->pesanan->id }} | {{ $d->pesanan->toko->nama_toko }} | {{ $d->tanggal_kirim }}
+                                {{ $d->pesanan->order_code ?? '#' . $d->pesanan->id }} | {{ $d->pesanan->toko->nama_toko }}
                             </option>
                         @endforeach
                     </select>
