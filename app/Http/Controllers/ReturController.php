@@ -8,6 +8,7 @@ use App\Models\Retur;
 use App\Models\Distribusi;
 use App\Models\DetailRetur;
 use App\Models\User;
+use Illuminate\Validation\ValidationException;
 
 class ReturController extends Controller
 {
@@ -24,7 +25,7 @@ class ReturController extends Controller
     {
         $distribusis = Distribusi::where('status_pengiriman', 'selesai')
             ->doesntHave('retur')
-            ->with(['pesanan.toko', 'pesanan.details.produk'])
+            ->with(['pesanan.toko', 'pesanan.details.produk', 'pesanan.piutang'])
             ->get();
         $kurirs = User::where('role', 'kurir')->orderBy('name')->get();
 
@@ -48,9 +49,11 @@ class ReturController extends Controller
             'kondisi.*' => 'required|in:expired,rusak,lainnya',
         ]);
 
+        $this->validatePotongPiutang($request);
+
         DB::transaction(function () use ($request) {
 
-            $distribusi = Distribusi::with('pesanan.details')->findOrFail($request->distribusi_id);
+            $distribusi = Distribusi::with(['pesanan.details', 'pesanan.piutang'])->findOrFail($request->distribusi_id);
 
             if ($distribusi->retur) {
                 abort(400, 'Distribusi sudah diretur');
@@ -125,5 +128,21 @@ class ReturController extends Controller
         $retur->complete(auth()->id());
 
         return redirect()->route('returs.show', $retur)->with('success', 'Retur selesai dan refund sudah diproses');
+    }
+
+    private function validatePotongPiutang(Request $request): void
+    {
+        if ($request->refund_method !== 'potong_piutang') {
+            return;
+        }
+
+        $distribusi = Distribusi::with('pesanan.piutang')->findOrFail($request->distribusi_id);
+        $piutang = $distribusi->pesanan?->piutang;
+
+        if (! $piutang || $piutang->status !== 'lunas') {
+            throw ValidationException::withMessages([
+                'refund_method' => 'Metode potong piutang hanya bisa dipilih jika piutang order sudah lunas.',
+            ]);
+        }
     }
 }

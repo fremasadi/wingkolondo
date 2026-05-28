@@ -11,6 +11,7 @@ use App\Models\Toko;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PesananController extends Controller
 {
@@ -63,6 +64,8 @@ class PesananController extends Controller
             'metode_pembayaran.required' => 'Metode pembayaran wajib dipilih.',
             'metode_pembayaran.in' => 'Metode pembayaran yang dipilih tidak valid.',
         ]);
+
+        $this->validateStokProduk($request);
 
         // 1. Simpan header pesanan
         $pesanan = Pesanan::create([
@@ -139,6 +142,8 @@ class PesananController extends Controller
             'status_pesanan.required' => 'Status pesanan wajib dipilih.',
             'status_pesanan.in' => 'Status pesanan yang dipilih tidak valid.',
         ]);
+
+        $this->validateStokProduk($request);
 
         // Update header
         $pesanan->update([
@@ -285,5 +290,45 @@ class PesananController extends Controller
         }
 
         return redirect()->route('pesanans.edit', $pesanan)->with('success', 'Distribusi berhasil dihapus');
+    }
+
+    private function validateStokProduk(Request $request): void
+    {
+        $requestedQtyByProduct = [];
+        $firstIndexByProduct = [];
+
+        foreach ($request->input('produk_id', []) as $index => $produkId) {
+            if (! $produkId) {
+                continue;
+            }
+
+            $requestedQtyByProduct[$produkId] = ($requestedQtyByProduct[$produkId] ?? 0) + (int) ($request->input("qty.$index") ?? 0);
+            $firstIndexByProduct[$produkId] ??= $index;
+        }
+
+        if (empty($requestedQtyByProduct)) {
+            return;
+        }
+
+        $produks = Produk::whereIn('id', array_keys($requestedQtyByProduct))
+            ->get()
+            ->keyBy('id');
+
+        $errors = [];
+
+        foreach ($requestedQtyByProduct as $produkId => $requestedQty) {
+            $produk = $produks->get($produkId);
+
+            if (! $produk || $requestedQty <= $produk->stok) {
+                continue;
+            }
+
+            $index = $firstIndexByProduct[$produkId];
+            $errors["qty.$index"] = "Qty {$produk->nama_produk} tidak boleh melebihi stok tersedia ({$produk->stok}).";
+        }
+
+        if (! empty($errors)) {
+            throw ValidationException::withMessages($errors);
+        }
     }
 }

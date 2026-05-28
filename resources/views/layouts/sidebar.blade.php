@@ -7,7 +7,7 @@
                 <i class="bx bxs-store text-primary" style="font-size: 30px;"></i>
             </span>
             <span class="app-brand-text demo menu-text fw-bolder ms-2">
-                WingkoLondo
+                Wingko Londo
             </span>
         </a>
 

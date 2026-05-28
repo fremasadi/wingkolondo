@@ -66,7 +66,7 @@ class Retur extends Model
 
             $pesanan = $this->distribusi?->pesanan;
 
-            if ($pesanan?->metode_pembayaran === 'tempo' && $pesanan->piutang) {
+            if ($this->refund_method === 'potong_piutang' && $pesanan?->metode_pembayaran === 'tempo' && $pesanan->piutang) {
                 $pesanan->piutang->applyReturAdjustment($this->refund_total);
             }
 

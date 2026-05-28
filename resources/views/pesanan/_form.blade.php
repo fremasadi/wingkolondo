@@ -92,6 +92,7 @@
     <thead>
         <tr>
             <th>Produk</th>
+            <th width="130">Stok</th>
             <th width="120">Qty</th>
             <th width="60">Aksi</th>
         </tr>
@@ -104,19 +105,26 @@
         @foreach($details as $i => $detail)
         <tr>
             <td>
-                <select name="produk_id[]" class="form-select" required>
+                <select name="produk_id[]" class="form-select @error("produk_id.$i") is-invalid @enderror" required>
                     <option value="">-- Pilih Produk --</option>
                     @foreach($produks as $produk)
                         <option value="{{ $produk->id }}"
+                            data-stok="{{ $produk->stok }}"
                             {{ old("produk_id.$i", $detail->produk_id ?? '') == $produk->id ? 'selected' : '' }}>
-                            {{ $produk->nama_produk }}
+                            {{ $produk->nama_produk }} (Stok: {{ $produk->stok }})
                         </option>
                     @endforeach
                 </select>
             </td>
             <td>
-                <input type="number" name="qty[]" min="1" class="form-control"
+                <span class="badge bg-label-secondary stok-produk">-</span>
+            </td>
+            <td>
+                <input type="number" name="qty[]" min="1" class="form-control @error("qty.$i") is-invalid @enderror"
                     value="{{ old("qty.$i", $detail->qty ?? 1) }}">
+                @error("qty.$i")
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </td>
             <td>
                 <button type="button" class="btn btn-sm btn-danger btn-hapus-item">
@@ -127,7 +135,7 @@
         @endforeach
     </tbody>
 </table>
-<div class="text-danger small d-none" id="detail-item-error">Lengkapi semua produk dan qty minimal 1.</div>
+<div class="text-danger small d-none" id="detail-item-error">Lengkapi semua produk dan qty minimal 1, serta pastikan qty tidak melebihi stok.</div>
 
 </div>
 
@@ -142,9 +150,14 @@
             <select name="produk_id[]" class="form-select" required>
                 <option value="">-- Pilih Produk --</option>
                 @foreach($produks as $produk)
-                    <option value="{{ $produk->id }}">{{ $produk->nama_produk }}</option>
+                    <option value="{{ $produk->id }}" data-stok="{{ $produk->stok }}">
+                        {{ $produk->nama_produk }} (Stok: {{ $produk->stok }})
+                    </option>
                 @endforeach
             </select>
+        </td>
+        <td>
+            <span class="badge bg-label-secondary stok-produk">-</span>
         </td>
         <td>
             <input type="number" name="qty[]" min="1" class="form-control" value="1">
@@ -168,6 +181,48 @@ document.addEventListener('DOMContentLoaded', function () {
     var statusPesanan = document.querySelector('select[name="status_pesanan"]');
     var detailItemError = document.getElementById('detail-item-error');
     var formPesanan = btnTambahItem ? btnTambahItem.closest('form') : null;
+
+    function getRowStock(row) {
+        var produk = row ? row.querySelector('select[name="produk_id[]"]') : null;
+        if (!produk || !produk.value) {
+            return null;
+        }
+
+        var selectedOption = produk.options[produk.selectedIndex];
+        var stock = selectedOption ? Number(selectedOption.dataset.stok) : null;
+
+        return Number.isFinite(stock) ? stock : null;
+    }
+
+    function updateRowStock(row) {
+        var stock = getRowStock(row);
+        var stockBadge = row ? row.querySelector('.stok-produk') : null;
+        var qty = row ? row.querySelector('input[name="qty[]"]') : null;
+
+        if (stockBadge) {
+            stockBadge.textContent = stock === null ? '-' : stock;
+            stockBadge.classList.toggle('bg-label-danger', stock !== null && stock <= 0);
+            stockBadge.classList.toggle('bg-label-warning', stock !== null && stock > 0 && stock <= 10);
+            stockBadge.classList.toggle('bg-label-success', stock !== null && stock > 10);
+            stockBadge.classList.toggle('bg-label-secondary', stock === null);
+        }
+
+        if (qty) {
+            if (stock === null) {
+                qty.removeAttribute('max');
+            } else {
+                qty.max = stock;
+            }
+        }
+    }
+
+    function updateAllRowStocks() {
+        if (!tabelItem) {
+            return;
+        }
+
+        tabelItem.querySelectorAll('tbody tr').forEach(updateRowStock);
+    }
 
     function showAlert(icon, title, text) {
         if (typeof Swal !== 'undefined') {
@@ -245,10 +300,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var rows = tabelItem.querySelectorAll('tbody tr');
         var valid = rows.length > 0;
+        var totalByProduct = {};
 
         rows.forEach(function (row) {
             var produk = row.querySelector('select[name="produk_id[]"]');
             var qty = row.querySelector('input[name="qty[]"]');
+            var stock = getRowStock(row);
+            var qtyValue = Number(qty ? qty.value : 0);
 
             if (!produk || !qty) {
                 return;
@@ -264,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 produk.classList.remove('is-invalid');
             }
 
-            if (String(qty.value || '').trim() === '' || Number(qty.value) < 1) {
+            if (String(qty.value || '').trim() === '' || qtyValue < 1) {
                 qty.classList.add('is-invalid');
                 rowValid = false;
                 valid = false;
@@ -272,7 +330,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 qty.classList.remove('is-invalid');
             }
 
+            if (produk.value && stock !== null) {
+                totalByProduct[produk.value] = (totalByProduct[produk.value] || 0) + Math.max(qtyValue, 0);
+            }
+
             if (!rowValid) {
+                valid = false;
+            }
+        });
+
+        rows.forEach(function (row) {
+            var produk = row.querySelector('select[name="produk_id[]"]');
+            var qty = row.querySelector('input[name="qty[]"]');
+            var stock = getRowStock(row);
+
+            if (!produk || !qty || !produk.value || stock === null) {
+                return;
+            }
+
+            if ((totalByProduct[produk.value] || 0) > stock) {
+                qty.classList.add('is-invalid');
                 valid = false;
             }
         });
@@ -289,6 +366,8 @@ document.addEventListener('DOMContentLoaded', function () {
             var template = document.getElementById('template-item');
             var clone = template.content.cloneNode(true);
             document.querySelector('#tabel-item tbody').appendChild(clone);
+            updateAllRowStocks();
+            validateDetailItems();
         });
     }
 
@@ -336,6 +415,14 @@ document.addEventListener('DOMContentLoaded', function () {
         tabelItem.addEventListener('change', function (e) {
             if (e.target.matches('select[name="produk_id[]"], input[name="qty[]"]')) {
                 e.target.classList.remove('is-invalid');
+                updateAllRowStocks();
+                validateDetailItems();
+            }
+        });
+
+        tabelItem.addEventListener('input', function (e) {
+            if (e.target.matches('input[name="qty[]"]')) {
+                e.target.classList.remove('is-invalid');
                 validateDetailItems();
             }
         });
@@ -361,6 +448,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     validateDetailItems();
+    updateAllRowStocks();
     syncTanggalKirimMin();
 });
 </script>

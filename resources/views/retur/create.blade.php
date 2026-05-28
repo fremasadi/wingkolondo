@@ -29,8 +29,13 @@
                                         'harga' => $detail->harga,
                                     ];
                                 })->values();
+                                $piutangStatus = $d->pesanan->piutang->status ?? '';
+                                $canPotongPiutang = $piutangStatus === 'lunas';
                             @endphp
-                            <option value="{{ $d->id }}" data-items='@json($items)'>
+                            <option value="{{ $d->id }}"
+                                data-items='@json($items)'
+                                data-can-potong-piutang="{{ $canPotongPiutang ? '1' : '0' }}"
+                                data-piutang-status="{{ $piutangStatus ?: 'tidak_ada' }}">
                                 {{ $d->pesanan->order_code ?? '#' . $d->pesanan->id }} | {{ $d->pesanan->toko->nama_toko }} | {{ $d->tanggal_kirim }}
                             </option>
                         @endforeach
@@ -49,11 +54,15 @@
 
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Metode Refund</label>
-                    <select name="refund_method" class="form-select" required>
-                        <option value="uang_tunai">Uang Tunai</option>
-                        <option value="transfer">Transfer</option>
-                        <option value="potong_piutang">Potong Piutang</option>
+                    <select name="refund_method" id="refund_method" class="form-select @error('refund_method') is-invalid @enderror" required>
+                        <option value="uang_tunai" {{ old('refund_method') === 'uang_tunai' ? 'selected' : '' }}>Uang Tunai</option>
+                        <option value="transfer" {{ old('refund_method') === 'transfer' ? 'selected' : '' }}>Transfer</option>
+                        <option value="potong_piutang" {{ old('refund_method') === 'potong_piutang' ? 'selected' : '' }}>Potong Piutang</option>
                     </select>
+                    <div class="invalid-feedback">
+                        @error('refund_method') {{ $message }} @enderror
+                    </div>
+                    <small class="text-muted d-none" id="potong-piutang-note">Potong piutang hanya tersedia jika piutang order sudah lunas.</small>
                 </div>
 
                 <div class="col-md-4 mb-3">
@@ -155,6 +164,8 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var distribusiSelect = document.getElementById('distribusi_id');
+    var refundMethod = document.getElementById('refund_method');
+    var potongPiutangNote = document.getElementById('potong-piutang-note');
     var tabelRetur = document.getElementById('tabel-retur');
     var btnTambah = document.getElementById('btn-tambah-retur');
 
@@ -165,6 +176,32 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         return JSON.parse(option.dataset.items);
+    }
+
+    function selectedDistribusiOption() {
+        return distribusiSelect.options[distribusiSelect.selectedIndex];
+    }
+
+    function refreshRefundOptions() {
+        if (!refundMethod) {
+            return;
+        }
+
+        var option = selectedDistribusiOption();
+        var potongOption = refundMethod.querySelector('option[value="potong_piutang"]');
+        var canPotongPiutang = option && option.dataset.canPotongPiutang === '1';
+
+        if (potongOption) {
+            potongOption.disabled = !canPotongPiutang;
+        }
+
+        if (!canPotongPiutang && refundMethod.value === 'potong_piutang') {
+            refundMethod.value = 'uang_tunai';
+        }
+
+        if (potongPiutangNote) {
+            potongPiutangNote.classList.toggle('d-none', canPotongPiutang || !distribusiSelect.value);
+        }
     }
 
     function refreshProdukOptions() {
@@ -185,7 +222,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    distribusiSelect.addEventListener('change', refreshProdukOptions);
+    distribusiSelect.addEventListener('change', function () {
+        refreshProdukOptions();
+        refreshRefundOptions();
+    });
 
     btnTambah.addEventListener('click', function () {
         var template = document.getElementById('template-retur-row');
@@ -220,6 +260,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     refreshProdukOptions();
+    refreshRefundOptions();
 });
 </script>
 @endsection
