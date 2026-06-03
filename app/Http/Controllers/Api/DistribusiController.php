@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Distribusi;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class DistribusiController extends Controller
@@ -145,22 +146,31 @@ class DistribusiController extends Controller
 
         $photoPath = $request->file('foto')->store('delivery-proofs', 'public');
 
-        $distribusi->update([
-            'status_pengiriman' => 'terkirim',
-            'delivery_latitude' => $validated['latitude'],
-            'delivery_longitude' => $validated['longitude'],
-            'delivery_photo' => $photoPath,
-            'delivery_note' => $validated['catatan'] ?? null,
-            'delivered_at' => now(),
-            'approved_by' => null,
-            'approved_at' => null,
-        ]);
+        DB::transaction(function () use ($distribusi, $validated, $photoPath) {
+            $distribusi->update([
+                'status_pengiriman' => 'terkirim',
+                'delivery_latitude' => $validated['latitude'],
+                'delivery_longitude' => $validated['longitude'],
+                'delivery_photo' => $photoPath,
+                'delivery_note' => $validated['catatan'] ?? null,
+                'delivered_at' => now(),
+                'approved_by' => null,
+                'approved_at' => null,
+            ]);
+
+            $distribusi->pesanan()->update([
+                'status_pesanan' => 'dikirim',
+            ]);
+        });
+
+        $distribusi->load('pesanan');
 
         return response()->json([
             'message' => 'Bukti pengiriman berhasil dikirim. Menunggu persetujuan admin.',
             'data' => [
                 'id' => $distribusi->id,
                 'status_pengiriman' => $distribusi->status_pengiriman,
+                'status_pesanan' => $distribusi->pesanan->status_pesanan,
                 'delivered_at' => optional($distribusi->delivered_at)->toDateTimeString(),
                 'latitude' => $distribusi->delivery_latitude,
                 'longitude' => $distribusi->delivery_longitude,
@@ -193,15 +203,24 @@ class DistribusiController extends Controller
             ], 422);
         }
 
-        $distribusi->update([
-            'status_pengiriman' => 'dikirim',
-        ]);
+        DB::transaction(function () use ($distribusi) {
+            $distribusi->update([
+                'status_pengiriman' => 'dikirim',
+            ]);
+
+            $distribusi->pesanan()->update([
+                'status_pesanan' => 'dikirim',
+            ]);
+        });
+
+        $distribusi->load('pesanan');
 
         return response()->json([
             'message' => 'Status distribusi berhasil diubah menjadi dikirim.',
             'data' => [
                 'id' => $distribusi->id,
                 'status_pengiriman' => $distribusi->status_pengiriman,
+                'status_pesanan' => $distribusi->pesanan->status_pesanan,
             ],
         ]);
     }
