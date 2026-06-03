@@ -170,4 +170,39 @@ class DistribusiController extends Controller
             ],
         ]);
     }
+
+    public function markAsDikirim(Request $request, Distribusi $distribusi)
+    {
+        $kurir = $request->user();
+
+        if ($kurir->role !== 'kurir') {
+            return response()->json([
+                'message' => 'Akses ditolak'
+            ], 403);
+        }
+
+        if ((int) $distribusi->kurir_id !== (int) $kurir->id) {
+            return response()->json([
+                'message' => 'Distribusi ini bukan tugas Anda'
+            ], 403);
+        }
+
+        if (in_array($distribusi->status_pengiriman, ['terkirim', 'selesai', 'retur'], true)) {
+            return response()->json([
+                'message' => 'Status distribusi ini tidak bisa diubah menjadi dikirim.'
+            ], 422);
+        }
+
+        $distribusi->update([
+            'status_pengiriman' => 'dikirim',
+        ]);
+
+        return response()->json([
+            'message' => 'Status distribusi berhasil diubah menjadi dikirim.',
+            'data' => [
+                'id' => $distribusi->id,
+                'status_pengiriman' => $distribusi->status_pengiriman,
+            ],
+        ]);
+    }
 }

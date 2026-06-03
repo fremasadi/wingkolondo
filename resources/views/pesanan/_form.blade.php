@@ -67,7 +67,7 @@
     <div class="col-md-4 mb-3">
         <label class="form-label">Status Pesanan</label>
         <select name="status_pesanan" class="form-select @error('status_pesanan') is-invalid @enderror" required>
-            @foreach(['draft','dikonfirmasi','diproses','dikirim','selesai','batal'] as $status)
+            @foreach(['diproses','dikirim','selesai','batal'] as $status)
                 <option value="{{ $status }}"
                     {{ old('status_pesanan', $pesanan->status_pesanan) == $status ? 'selected' : '' }}>
                     {{ ucfirst($status) }}

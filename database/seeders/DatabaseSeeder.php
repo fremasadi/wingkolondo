@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             UsersTableSeeder::class,
             DistribusiReturUser2Seeder::class,
             PesananDistribusiPaginationSeeder::class,
+            TestingPesananDistribusiUser2Seeder::class,
         ]);
     }
 }

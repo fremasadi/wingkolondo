@@ -9,7 +9,9 @@ test('login screen can be rendered', function () {
 });
 
 test('users can authenticate using the login screen', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'role' => 'admin',
+    ]);
 
     $response = $this->post('/login', [
         'email' => $user->email,
@@ -18,6 +20,20 @@ test('users can authenticate using the login screen', function () {
 
     $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
+});
+
+test('non admin users can not authenticate using the login screen', function () {
+    $user = User::factory()->create([
+        'role' => 'kurir',
+    ]);
+
+    $response = $this->post('/login', [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $this->assertGuest();
+    $response->assertSessionHasErrors('email');
 });
 
 test('users can not authenticate with invalid password', function () {

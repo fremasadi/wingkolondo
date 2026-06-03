@@ -49,6 +49,15 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        if (Auth::user()->role !== 'admin') {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'Login hanya diperbolehkan untuk admin.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

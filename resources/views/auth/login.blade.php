@@ -426,7 +426,7 @@
                 </a>
 
                 <h2 class="login-title">Selamat datang kembali</h2>
-                <p class="login-subtitle">Gunakan akun yang sudah terdaftar untuk melanjutkan ke dashboard.</p>
+                <p class="login-subtitle">Gunakan akun admin yang sudah terdaftar untuk melanjutkan ke dashboard.</p>
 
                 @if (session('status'))
                     <div class="status-message">{{ session('status') }}</div>
@@ -479,9 +479,9 @@
                             <span>Ingat saya</span>
                         </label>
 
-                        @if (Route::has('password.request'))
+                        <!-- @if (Route::has('password.request'))
                             <a class="text-link" href="{{ route('password.request') }}">Lupa password?</a>
-                        @endif
+                        @endif -->
                     </div>
 
                     <button class="login-button" type="submit">
@@ -490,7 +490,7 @@
                     </button>
                 </form>
 
-                <p class="login-footnote">Akses hanya untuk pengguna yang memiliki akun aktif.</p>
+                <p class="login-footnote">Akses dashboard hanya untuk pengguna dengan role admin.</p>
             </div>
         </section>
     </main>

@@ -98,6 +98,12 @@ class PesananController extends Controller
 
     public function edit(Pesanan $pesanan)
     {
+        if ($this->isSelesai($pesanan)) {
+            return redirect()
+                ->route('pesanans.show', $pesanan)
+                ->with('error', 'Pesanan yang sudah selesai tidak bisa diedit.');
+        }
+
         return view('pesanan.edit', [
             'pesanan' => $pesanan->load(['details.produk', 'distribusi']),
             'tokos' => Toko::orderBy('nama_toko')->get(),
@@ -106,8 +112,27 @@ class PesananController extends Controller
         ]);
     }
 
+    public function show(Pesanan $pesanan)
+    {
+        return view('pesanan.show', [
+            'pesanan' => $pesanan->load([
+                'toko',
+                'details.produk',
+                'distribusi.kurir',
+                'distribusi.approver',
+                'piutang',
+            ]),
+        ]);
+    }
+
     public function update(Request $request, Pesanan $pesanan)
     {
+        if ($this->isSelesai($pesanan)) {
+            return redirect()
+                ->route('pesanans.show', $pesanan)
+                ->with('error', 'Pesanan yang sudah selesai tidak bisa diedit.');
+        }
+
         $request->validate([
             'toko_id' => 'required|exists:tokos,id',
             'tanggal_pesanan' => 'required|date',
@@ -183,6 +208,10 @@ class PesananController extends Controller
 
     public function destroy(Pesanan $pesanan)
     {
+        if ($this->isSelesai($pesanan)) {
+            return redirect()->back()->with('error', 'Pesanan yang sudah selesai tidak bisa dihapus');
+        }
+
         if (! $pesanan->isEditable()) {
             return redirect()->back()->with('error', 'Pesanan tidak bisa dihapus');
         }
@@ -330,5 +359,13 @@ class PesananController extends Controller
         if (! empty($errors)) {
             throw ValidationException::withMessages($errors);
         }
+    }
+
+    private function isSelesai(Pesanan $pesanan): bool
+    {
+        $pesanan->loadMissing('distribusi');
+
+        return $pesanan->status_pesanan === 'selesai'
+            || $pesanan->distribusi?->status_pengiriman === 'selesai';
     }
 }

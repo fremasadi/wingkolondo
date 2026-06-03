@@ -34,7 +34,7 @@
                             <th>Toko</th>
                             <th>Kurir</th>
                             <th>Status</th>
-                            <th width="150">Aksi</th>
+                            <th width="170">Aksi</th>
                         @else
                             <th>Order</th>
                             <th>Tanggal</th>
@@ -42,7 +42,7 @@
                             <th>Status</th>
                             <th>Distribusi</th>
                             <th>Total</th>
-                            <th width="120">Aksi</th>
+                            <th width="150">Aksi</th>
                         @endif
                     </tr>
                 </thead>
@@ -73,10 +73,16 @@
                                         </button>
                                     </form>
                                 @endif
-                                <a href="{{ route('pesanans.edit', $pesanan) }}"
-                                   class="btn btn-sm btn-warning">
-                                    <i class="bx bx-edit"></i>
+                                <a href="{{ route('pesanans.show', $pesanan) }}"
+                                   class="btn btn-sm btn-info">
+                                    <i class="bx bx-show"></i>
                                 </a>
+                                @if($pesanan->status_pesanan !== 'selesai' && $pesanan->distribusi->status_pengiriman !== 'selesai')
+                                    <a href="{{ route('pesanans.edit', $pesanan) }}"
+                                       class="btn btn-sm btn-warning">
+                                        <i class="bx bx-edit"></i>
+                                    </a>
+                                @endif
                             </td>
                         </tr>
                         @empty
@@ -86,6 +92,10 @@
                         @endforelse
                     @else
                         @forelse($pesanans as $pesanan)
+                        @php
+                            $isSelesai = $pesanan->status_pesanan === 'selesai'
+                                || $pesanan->distribusi?->status_pengiriman === 'selesai';
+                        @endphp
                         <tr>
                             <td><strong>{{ $pesanan->order_code ?? '#' . $pesanan->id }}</strong></td>
                             <td>{{ $pesanan->tanggal_pesanan }}</td>
@@ -106,18 +116,24 @@
                             </td>
                             <td>{{ $pesanan->total_harga_formatted }}</td>
                             <td>
-                                <a href="{{ route('pesanans.edit', $pesanan) }}"
-                                   class="btn btn-sm btn-warning">
-                                    <i class="bx bx-edit"></i>
+                                <a href="{{ route('pesanans.show', $pesanan) }}"
+                                   class="btn btn-sm btn-info">
+                                    <i class="bx bx-show"></i>
                                 </a>
-                                <form action="{{ route('pesanans.destroy', $pesanan) }}"
-                                      method="POST" class="d-inline">
-                                    @csrf @method('DELETE')
-                                    <button onclick="return confirm('Hapus pesanan?')"
-                                            class="btn btn-sm btn-danger">
-                                        <i class="bx bx-trash"></i>
-                                    </button>
-                                </form>
+                                @if(! $isSelesai)
+                                    <a href="{{ route('pesanans.edit', $pesanan) }}"
+                                       class="btn btn-sm btn-warning">
+                                        <i class="bx bx-edit"></i>
+                                    </a>
+                                    <form action="{{ route('pesanans.destroy', $pesanan) }}"
+                                          method="POST" class="d-inline">
+                                        @csrf @method('DELETE')
+                                        <button onclick="return confirm('Hapus pesanan?')"
+                                                class="btn btn-sm btn-danger">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                         @empty

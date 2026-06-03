@@ -452,64 +452,70 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Chart Pendapatan 7 Hari Terakhir
-const pendapatanData = @json($pendapatan7Hari);
-const labels = pendapatanData.map(item => {
-    const date = new Date(item.tanggal);
-    return date.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' });
-});
-const data = pendapatanData.map(item => item.total);
+document.addEventListener('DOMContentLoaded', function () {
+    const chartEl = document.getElementById('pendapatanChart');
 
-const ctx = document.getElementById('pendapatanChart').getContext('2d');
-new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: labels,
-        datasets: [{
-            label: 'Pendapatan (Rp)',
-            data: data,
-            borderColor: 'rgb(75, 192, 192)',
-            backgroundColor: 'rgba(75, 192, 192, 0.1)',
-            tension: 0.4,
-            fill: true
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-            legend: {
-                display: true,
-                position: 'top',
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        let label = context.dataset.label || '';
-                        if (label) {
-                            label += ': ';
+    if (!chartEl || typeof Chart === 'undefined') {
+        return;
+    }
+
+    const pendapatanData = @json($pendapatan7Hari);
+    const labels = pendapatanData.map(item => {
+        const date = new Date(item.tanggal);
+        return date.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' });
+    });
+    const data = pendapatanData.map(item => item.total);
+
+    new Chart(chartEl.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Pendapatan (Rp)',
+                data: data,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            label += new Intl.NumberFormat('id-ID', {
+                                style: 'currency',
+                                currency: 'IDR',
+                                minimumFractionDigits: 0
+                            }).format(context.parsed.y);
+                            return label;
                         }
-                        label += new Intl.NumberFormat('id-ID', {
-                            style: 'currency',
-                            currency: 'IDR',
-                            minimumFractionDigits: 0
-                        }).format(context.parsed.y);
-                        return label;
                     }
                 }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    callback: function(value) {
-                        return 'Rp ' + value.toLocaleString('id-ID');
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'Rp ' + value.toLocaleString('id-ID');
+                        }
                     }
                 }
             }
         }
-    }
+    });
 });
 </script>
 @endpush
