@@ -66,26 +66,18 @@
     @isset($pesanan)
     <div class="col-md-4 mb-3">
         <label class="form-label">Status Pesanan</label>
-        <select name="status_pesanan" class="form-select @error('status_pesanan') is-invalid @enderror" required>
-            @foreach(['diproses','dikirim','selesai','batal'] as $status)
-                <option value="{{ $status }}"
-                    {{ old('status_pesanan', $pesanan->status_pesanan) == $status ? 'selected' : '' }}>
-                    {{ ucfirst($status) }}
-                </option>
-            @endforeach
-        </select>
-        <div class="invalid-feedback" data-error-for="status_pesanan">
-            @error('status_pesanan') {{ $message }} @else Silakan pilih status pesanan. @enderror
-        </div>
+        <input type="text" class="form-control" value="{{ ucfirst($pesanan->status_pesanan) }}" readonly>
     </div>
     @endisset
 
     <hr>
 <div class="d-flex justify-content-between align-items-center mb-2">
     <h5 class="mb-0">Detail Produk</h5>
-    <button type="button" class="btn btn-sm btn-success" id="btn-tambah-item">
-        <i class="bx bx-plus"></i> Tambah Item
-    </button>
+    @if(! isset($pesanan) || $pesanan->status_pesanan === 'diproses')
+        <button type="button" class="btn btn-sm btn-success" id="btn-tambah-item">
+            <i class="bx bx-plus"></i> Tambah Item
+        </button>
+    @endif
 </div>
 
 <table class="table" id="tabel-item">
@@ -140,7 +132,9 @@
 </div>
 
 <div class="mt-3">
-    <button class="btn btn-primary">{{ $button }}</button>
+    @if(empty($hideSubmitButton))
+        <button class="btn btn-primary">{{ $button }}</button>
+    @endif
     <a href="{{ route('pesanans.index') }}" class="btn btn-secondary">Kembali</a>
 </div>
 
@@ -178,7 +172,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var tanggalPesanan = document.querySelector('input[name="tanggal_pesanan"]');
     var tanggalKirim = document.querySelector('input[name="tanggal_kirim"]');
     var metodePembayaran = document.querySelector('select[name="metode_pembayaran"]');
-    var statusPesanan = document.querySelector('select[name="status_pesanan"]');
     var detailItemError = document.getElementById('detail-item-error');
     var formPesanan = btnTambahItem ? btnTambahItem.closest('form') : null;
 
@@ -401,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    [tokoSelect, metodePembayaran, statusPesanan].forEach(function (field) {
+    [tokoSelect, metodePembayaran].forEach(function (field) {
         if (!field) {
             return;
         }
@@ -436,7 +429,6 @@ document.addEventListener('DOMContentLoaded', function () {
             isValid = validateRequiredField(tanggalPesanan, 'Tanggal pesanan wajib diisi.') && isValid;
             isValid = validateRequiredField(tanggalKirim, 'Tanggal kirim wajib diisi.') && isValid;
             isValid = validateRequiredField(metodePembayaran, 'Silakan pilih metode pembayaran.') && isValid;
-            isValid = validateRequiredField(statusPesanan, 'Silakan pilih status pesanan.') && isValid;
             isValid = validateDetailItems() && isValid;
             isValid = syncTanggalKirimMin() && isValid;
 

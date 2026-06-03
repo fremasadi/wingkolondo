@@ -2,6 +2,11 @@
 
 @section('content')
 <div class="container-xxl container-p-y">
+    @php
+        $isDikirimLocked = $pesanan->status_pesanan === 'dikirim'
+            && $pesanan->distribusi?->status_pengiriman === 'dikirim';
+    @endphp
+
     <h4 class="fw-bold mb-3">Edit Pesanan</h4>
 
     <div class="card mb-4">
@@ -11,7 +16,10 @@
         <div class="card-body">
             <form action="{{ route('pesanans.update', $pesanan) }}" method="POST">
                 @csrf @method('PUT')
-                @include('pesanan._form', ['button' => 'Update Pesanan'])
+                @include('pesanan._form', [
+                    'button' => 'Update Pesanan',
+                    'hideSubmitButton' => $isDikirimLocked,
+                ])
             </form>
         </div>
     </div>
@@ -58,19 +66,7 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Status Pengiriman</label>
-                            @if($pesanan->distribusi->status_pengiriman === 'selesai')
-                                <input type="hidden" name="status_pengiriman" value="selesai">
-                                <input type="text" class="form-control" value="Selesai" readonly>
-                            @else
-                                <select name="status_pengiriman" class="form-select">
-                                    @foreach(['pending','dikirim','terkirim'] as $status)
-                                        <option value="{{ $status }}"
-                                            {{ $pesanan->distribusi->status_pengiriman == $status ? 'selected' : '' }}>
-                                            {{ ucfirst($status) }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            @endif
+                            <input type="text" class="form-control" value="{{ ucfirst($pesanan->distribusi->status_pengiriman) }}" readonly>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Catatan</label>
@@ -78,12 +74,14 @@
                                 value="{{ $pesanan->distribusi->catatan }}">
                         </div>
                     </div>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-primary">Update Distribusi</button>
-                        <button type="button" class="btn btn-danger" onclick="if(confirm('Hapus distribusi?')) document.getElementById('delete-distribusi').submit()">
-                            <i class="bx bx-trash"></i> Hapus
-                        </button>
-                    </div>
+                    @if(! $isDikirimLocked)
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary">Update Distribusi</button>
+                            <button type="button" class="btn btn-danger" onclick="if(confirm('Hapus distribusi?')) document.getElementById('delete-distribusi').submit()">
+                                <i class="bx bx-trash"></i> Hapus
+                            </button>
+                        </div>
+                    @endif
                 </form>
 
                 @if($pesanan->distribusi->delivery_photo || $pesanan->distribusi->delivery_latitude || $pesanan->distribusi->delivery_longitude || $pesanan->distribusi->delivery_note)

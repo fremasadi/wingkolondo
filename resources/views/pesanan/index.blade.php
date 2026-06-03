@@ -77,7 +77,7 @@
                                    class="btn btn-sm btn-info">
                                     <i class="bx bx-show"></i>
                                 </a>
-                                @if($pesanan->status_pesanan !== 'selesai' && $pesanan->distribusi->status_pengiriman !== 'selesai')
+                                @if($pesanan->status_pesanan !== 'selesai')
                                     <a href="{{ route('pesanans.edit', $pesanan) }}"
                                        class="btn btn-sm btn-warning">
                                         <i class="bx bx-edit"></i>
@@ -93,8 +93,7 @@
                     @else
                         @forelse($pesanans as $pesanan)
                         @php
-                            $isSelesai = $pesanan->status_pesanan === 'selesai'
-                                || $pesanan->distribusi?->status_pengiriman === 'selesai';
+                            $isSelesai = $pesanan->status_pesanan === 'selesai';
                         @endphp
                         <tr>
                             <td><strong>{{ $pesanan->order_code ?? '#' . $pesanan->id }}</strong></td>

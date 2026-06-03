@@ -133,6 +133,12 @@ class PesananController extends Controller
                 ->with('error', 'Pesanan yang sudah selesai tidak bisa diedit.');
         }
 
+        if ($this->isDikirimLocked($pesanan)) {
+            return redirect()
+                ->route('pesanans.edit', $pesanan)
+                ->with('error', 'Pesanan yang sudah dikirim tidak bisa diperbarui.');
+        }
+
         $request->validate([
             'toko_id' => 'required|exists:tokos,id',
             'tanggal_pesanan' => 'required|date',
@@ -142,7 +148,6 @@ class PesananController extends Controller
             'qty' => 'required|array|min:1',
             'qty.*' => 'required|integer|min:1',
             'metode_pembayaran' => 'required|in:cash,transfer,tempo',
-            'status_pesanan' => 'required|in:draft,dikonfirmasi,diproses,dikirim,selesai,batal',
         ], [
             'toko_id.required' => 'Toko wajib dipilih.',
             'toko_id.exists' => 'Toko yang dipilih tidak valid.',
@@ -164,8 +169,6 @@ class PesananController extends Controller
             'qty.*.min' => 'Qty produk minimal 1.',
             'metode_pembayaran.required' => 'Metode pembayaran wajib dipilih.',
             'metode_pembayaran.in' => 'Metode pembayaran yang dipilih tidak valid.',
-            'status_pesanan.required' => 'Status pesanan wajib dipilih.',
-            'status_pesanan.in' => 'Status pesanan yang dipilih tidak valid.',
         ]);
 
         $this->validateStokProduk($request);
@@ -175,7 +178,6 @@ class PesananController extends Controller
             'toko_id' => $request->toko_id,
             'tanggal_pesanan' => $request->tanggal_pesanan,
             'tanggal_kirim' => $request->tanggal_kirim,
-            'status_pesanan' => $request->status_pesanan,
             'metode_pembayaran' => $request->metode_pembayaran,
         ]);
 
@@ -246,9 +248,14 @@ class PesananController extends Controller
 
     public function updateDistribusi(Request $request, Pesanan $pesanan)
     {
+        if ($this->isDikirimLocked($pesanan)) {
+            return redirect()
+                ->route('pesanans.edit', $pesanan)
+                ->with('error', 'Distribusi yang sudah dikirim tidak bisa diperbarui.');
+        }
+
         $request->validate([
             'kurir_id' => 'nullable|exists:users,id',
-            'status_pengiriman' => 'required|in:pending,dikirim,terkirim,selesai',
         ]);
 
         if (! $pesanan->tanggal_kirim) {
@@ -260,7 +267,6 @@ class PesananController extends Controller
         $pesanan->distribusi->update([
             'kurir_id' => $request->kurir_id,
             'tanggal_kirim' => $pesanan->tanggal_kirim,
-            'status_pengiriman' => $request->status_pengiriman,
             'catatan' => $request->catatan,
         ]);
 
@@ -284,10 +290,28 @@ class PesananController extends Controller
         }
 
         DB::transaction(function () use ($distribusi, $pesanan) {
+            $pesanan->loadMissing('details.produk');
+
+            foreach ($pesanan->details as $detail) {
+                $produk = Produk::whereKey($detail->produk_id)->lockForUpdate()->firstOrFail();
+
+                if ($produk->stok < $detail->qty) {
+                    throw ValidationException::withMessages([
+                        'stok' => "Stok {$produk->nama_produk} tidak cukup. Stok tersedia {$produk->stok}, dibutuhkan {$detail->qty}.",
+                    ]);
+                }
+
+                $produk->decrement('stok', $detail->qty);
+            }
+
             $distribusi->update([
                 'status_pengiriman' => 'selesai',
                 'approved_by' => auth()->id(),
                 'approved_at' => now(),
+            ]);
+
+            $pesanan->update([
+                'status_pesanan' => 'selesai',
             ]);
 
             if ($pesanan->metode_pembayaran === 'tempo') {
@@ -309,11 +333,17 @@ class PesananController extends Controller
             return redirect()->route('pesanans.index', ['view' => 'distribusi'])->with('success', 'Distribusi selesai & piutang diproses');
         }
 
-        return redirect()->route('pesanans.edit', $pesanan)->with('success', 'Distribusi selesai & piutang diproses');
+        return redirect()->route('pesanans.show', $pesanan)->with('success', 'Distribusi selesai & piutang diproses');
     }
 
     public function destroyDistribusi(Pesanan $pesanan)
     {
+        if ($this->isDikirimLocked($pesanan)) {
+            return redirect()
+                ->route('pesanans.edit', $pesanan)
+                ->with('error', 'Distribusi yang sudah dikirim tidak bisa dihapus.');
+        }
+
         if ($pesanan->distribusi) {
             $pesanan->distribusi->delete();
         }
@@ -363,9 +393,14 @@ class PesananController extends Controller
 
     private function isSelesai(Pesanan $pesanan): bool
     {
+        return $pesanan->status_pesanan === 'selesai';
+    }
+
+    private function isDikirimLocked(Pesanan $pesanan): bool
+    {
         $pesanan->loadMissing('distribusi');
 
-        return $pesanan->status_pesanan === 'selesai'
-            || $pesanan->distribusi?->status_pengiriman === 'selesai';
+        return $pesanan->status_pesanan === 'dikirim'
+            && $pesanan->distribusi?->status_pengiriman === 'dikirim';
     }
 }

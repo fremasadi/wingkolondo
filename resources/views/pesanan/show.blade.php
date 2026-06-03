@@ -12,7 +12,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="fw-bold mb-0">Detail Pesanan</h4>
         <div class="d-flex gap-2">
-            @if($pesanan->status_pesanan !== 'selesai' && $pesanan->distribusi?->status_pengiriman !== 'selesai')
+            @if($pesanan->status_pesanan !== 'selesai')
                 <a href="{{ route('pesanans.edit', $pesanan) }}" class="btn btn-warning">
                     <i class="bx bx-edit"></i> Edit
                 </a>
