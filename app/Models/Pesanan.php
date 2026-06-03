@@ -55,7 +55,7 @@ class Pesanan extends Model
     // Cek apakah pesanan masih bisa diedit
     public function isEditable()
     {
-        return in_array($this->status_pesanan, ['draft', 'dikonfirmasi']);
+        return in_array($this->status_pesanan, ['draft', 'dikonfirmasi', 'diproses']);
     }
 
     // Format total harga

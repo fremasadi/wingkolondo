@@ -124,14 +124,16 @@
                                        class="btn btn-sm btn-warning">
                                         <i class="bx bx-edit"></i>
                                     </a>
-                                    <form action="{{ route('pesanans.destroy', $pesanan) }}"
-                                          method="POST" class="d-inline">
-                                        @csrf @method('DELETE')
-                                        <button onclick="return confirm('Hapus pesanan?')"
-                                                class="btn btn-sm btn-danger">
-                                            <i class="bx bx-trash"></i>
-                                        </button>
-                                    </form>
+                                    @if($pesanan->isEditable())
+                                        <form action="{{ route('pesanans.destroy', $pesanan) }}"
+                                              method="POST" class="d-inline">
+                                            @csrf @method('DELETE')
+                                            <button onclick="return confirm('Hapus pesanan?')"
+                                                    class="btn btn-sm btn-danger">
+                                                <i class="bx bx-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 @endif
                             </td>
                         </tr>
