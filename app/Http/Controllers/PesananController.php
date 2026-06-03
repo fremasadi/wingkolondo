@@ -139,16 +139,23 @@ class PesananController extends Controller
                 ->with('error', 'Pesanan yang sudah dikirim tidak bisa diperbarui.');
         }
 
-        $request->validate([
+        $rules = [
             'toko_id' => 'required|exists:tokos,id',
             'tanggal_pesanan' => 'required|date',
             'tanggal_kirim' => 'required|date|after_or_equal:tanggal_pesanan',
-            'produk_id' => 'required|array|min:1',
-            'produk_id.*' => 'required|exists:produks,id',
-            'qty' => 'required|array|min:1',
-            'qty.*' => 'required|integer|min:1',
             'metode_pembayaran' => 'required|in:cash,transfer,tempo',
-        ], [
+        ];
+
+        if ($pesanan->status_pesanan === 'diproses') {
+            $rules += [
+                'produk_id' => 'required|array|min:1',
+                'produk_id.*' => 'required|exists:produks,id',
+                'qty' => 'required|array|min:1',
+                'qty.*' => 'required|integer|min:1',
+            ];
+        }
+
+        $request->validate($rules, [
             'toko_id.required' => 'Toko wajib dipilih.',
             'toko_id.exists' => 'Toko yang dipilih tidak valid.',
             'tanggal_pesanan.required' => 'Tanggal pesanan wajib diisi.',
@@ -171,7 +178,9 @@ class PesananController extends Controller
             'metode_pembayaran.in' => 'Metode pembayaran yang dipilih tidak valid.',
         ]);
 
-        $this->validateStokProduk($request);
+        if ($pesanan->status_pesanan === 'diproses') {
+            $this->validateStokProduk($request);
+        }
 
         // Update header
         $pesanan->update([
@@ -187,23 +196,25 @@ class PesananController extends Controller
             ]);
         }
 
-        // Hapus detail lama
-        $pesanan->details()->delete();
+        if ($pesanan->status_pesanan === 'diproses') {
+            // Hapus detail lama
+            $pesanan->details()->delete();
 
-        // Simpan detail baru
-        foreach ($request->produk_id as $index => $produkId) {
-            $produk = Produk::findOrFail($produkId);
+            // Simpan detail baru
+            foreach ($request->produk_id as $index => $produkId) {
+                $produk = Produk::findOrFail($produkId);
 
-            DetailPesanan::create([
-                'pesanan_id' => $pesanan->id,
-                'produk_id' => $produkId,
-                'qty' => $request->qty[$index],
-                'harga' => $produk->harga,
-                'subtotal' => $produk->harga * $request->qty[$index],
-            ]);
+                DetailPesanan::create([
+                    'pesanan_id' => $pesanan->id,
+                    'produk_id' => $produkId,
+                    'qty' => $request->qty[$index],
+                    'harga' => $produk->harga,
+                    'subtotal' => $produk->harga * $request->qty[$index],
+                ]);
+            }
+
+            $pesanan->updateTotalHarga();
         }
-
-        $pesanan->updateTotalHarga();
 
         return redirect()->route('pesanans.edit', $pesanan)->with('success', 'Pesanan berhasil diperbarui');
     }

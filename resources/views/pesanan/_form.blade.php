@@ -1,4 +1,7 @@
 <div class="row">
+    @php
+        $canEditItems = ! isset($pesanan) || $pesanan->status_pesanan === 'diproses';
+    @endphp
 
     @isset($pesanan)
     <div class="col-md-4 mb-3">
@@ -73,7 +76,7 @@
     <hr>
 <div class="d-flex justify-content-between align-items-center mb-2">
     <h5 class="mb-0">Detail Produk</h5>
-    @if(! isset($pesanan) || $pesanan->status_pesanan === 'diproses')
+    @if($canEditItems)
         <button type="button" class="btn btn-sm btn-success" id="btn-tambah-item">
             <i class="bx bx-plus"></i> Tambah Item
         </button>
@@ -91,37 +94,48 @@
     </thead>
     <tbody>
         @php
-            $details = old('produk_id') ?? ($pesanan->details ?? [null]);
+            $details = ($canEditItems && old('produk_id')) ? old('produk_id') : ($pesanan->details ?? [null]);
         @endphp
 
         @foreach($details as $i => $detail)
+        @php
+            $selectedProdukId = old("produk_id.$i", is_object($detail) ? $detail->produk_id : $detail);
+            $qtyValue = old("qty.$i", is_object($detail) ? $detail->qty : 1);
+        @endphp
         <tr>
             <td>
-                <select name="produk_id[]" class="form-select @error("produk_id.$i") is-invalid @enderror" required>
+                <select name="produk_id[]" class="form-select @error("produk_id.$i") is-invalid @enderror" required @disabled(! $canEditItems)>
                     <option value="">-- Pilih Produk --</option>
                     @foreach($produks as $produk)
                         <option value="{{ $produk->id }}"
                             data-stok="{{ $produk->stok }}"
-                            {{ old("produk_id.$i", $detail->produk_id ?? '') == $produk->id ? 'selected' : '' }}>
+                            {{ $selectedProdukId == $produk->id ? 'selected' : '' }}>
                             {{ $produk->nama_produk }} (Stok: {{ $produk->stok }})
                         </option>
                     @endforeach
                 </select>
+                @if(! $canEditItems)
+                    <input type="hidden" name="produk_id[]" value="{{ $selectedProdukId }}">
+                @endif
             </td>
             <td>
                 <span class="badge bg-label-secondary stok-produk">-</span>
             </td>
             <td>
                 <input type="number" name="qty[]" min="1" class="form-control @error("qty.$i") is-invalid @enderror"
-                    value="{{ old("qty.$i", $detail->qty ?? 1) }}">
+                    value="{{ $qtyValue }}" @readonly(! $canEditItems)>
                 @error("qty.$i")
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </td>
             <td>
-                <button type="button" class="btn btn-sm btn-danger btn-hapus-item">
-                    <i class="bx bx-trash"></i>
-                </button>
+                @if($canEditItems)
+                    <button type="button" class="btn btn-sm btn-danger btn-hapus-item">
+                        <i class="bx bx-trash"></i>
+                    </button>
+                @else
+                    <span class="text-muted">-</span>
+                @endif
             </td>
         </tr>
         @endforeach
