@@ -123,7 +123,7 @@
                 </div>
                 <div class="card-body">
                     <ul class="p-0 m-0">
-                        <li class="d-flex mb-3 pb-1">
+                        <!-- <li class="d-flex mb-3 pb-1">
                             <div class="avatar flex-shrink-0 me-3">
                                 <span class="avatar-initial rounded bg-label-secondary"><i class="bx bx-file"></i></span>
                             </div>
@@ -150,7 +150,7 @@
                                     <h6 class="mb-0">{{ $pesananDikonfirmasi }}</h6>
                                 </div>
                             </div>
-                        </li>
+                        </li> -->
                         <li class="d-flex mb-3 pb-1">
                             <div class="avatar flex-shrink-0 me-3">
                                 <span class="avatar-initial rounded bg-label-warning"><i class="bx bx-time"></i></span>

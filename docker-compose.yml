@@ -1,0 +1,56 @@
+services:
+  app:
+    build:
+      context: .
+      target: production
+    image: wingkolondo-app:latest
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      RUN_MIGRATIONS: "true"
+    ports:
+      - "${APP_PORT:-8080}:80"
+    volumes:
+      - app_storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  queue:
+    image: wingkolondo-app:latest
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      RUN_MIGRATIONS: "false"
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--timeout=90"]
+    volumes:
+      - app_storage:/var/www/html/storage
+    depends_on:
+      app:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  app_storage:
+  mysql_data:
