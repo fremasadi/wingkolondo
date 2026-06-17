@@ -38,6 +38,10 @@ class AuthController extends Controller
 
         $token = $user->createToken('kurir-token')->plainTextToken;
 
+        if ($request->has('fcm_token')) {
+            $user->update(['fcm_token' => $request->fcm_token]);
+        }
+
         return response()->json([
             'message' => 'Login berhasil',
             'token' => $token,

@@ -250,13 +250,25 @@ class PesananController extends Controller
                 ->with('error', 'Tanggal kirim pada pesanan wajib diisi sebelum membuat distribusi.');
         }
 
-        Distribusi::create([
+        $distribusi = Distribusi::create([
             'pesanan_id' => $pesanan->id,
             'kurir_id' => $request->kurir_id,
             'tanggal_kirim' => $pesanan->tanggal_kirim,
             'status_pengiriman' => 'pending',
             'catatan' => $request->catatan,
         ]);
+
+        if ($request->kurir_id) {
+            $kurir = User::find($request->kurir_id);
+            if ($kurir && $kurir->fcm_token) {
+                \App\Services\FirebaseService::sendNotification(
+                    $kurir->fcm_token,
+                    'Tugas Pengiriman Baru',
+                    "Anda ditugaskan mengirim pesanan {$pesanan->order_code} pada {$pesanan->tanggal_kirim}",
+                    ['pesanan_id' => $pesanan->id, 'distribusi_id' => $distribusi->id]
+                );
+            }
+        }
 
         return redirect()->route('pesanans.edit', $pesanan)->with('success', 'Distribusi berhasil dibuat');
     }
@@ -279,11 +291,25 @@ class PesananController extends Controller
                 ->with('error', 'Tanggal kirim pada pesanan wajib diisi sebelum memperbarui distribusi.');
         }
 
+        $oldKurirId = $pesanan->distribusi->kurir_id;
+
         $pesanan->distribusi->update([
             'kurir_id' => $request->kurir_id,
             'tanggal_kirim' => $pesanan->tanggal_kirim,
             'catatan' => $request->catatan,
         ]);
+
+        if ($request->kurir_id && $request->kurir_id != $oldKurirId) {
+            $kurir = User::find($request->kurir_id);
+            if ($kurir && $kurir->fcm_token) {
+                \App\Services\FirebaseService::sendNotification(
+                    $kurir->fcm_token,
+                    'Perubahan Tugas Pengiriman',
+                    "Anda telah ditugaskan mengirim pesanan {$pesanan->order_code} pada {$pesanan->tanggal_kirim}",
+                    ['pesanan_id' => $pesanan->id, 'distribusi_id' => $pesanan->distribusi->id]
+                );
+            }
+        }
 
         return redirect()->route('pesanans.edit', $pesanan)->with('success', 'Distribusi berhasil diperbarui');
     }
