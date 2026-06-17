@@ -15,9 +15,14 @@
         <select name="toko_id" class="form-select @error('toko_id') is-invalid @enderror" required>
             <option value="">-- Pilih Toko --</option>
             @foreach($tokos as $toko)
+                @php
+                    $isSelected = old('toko_id', $pesanan->toko_id ?? '') == $toko->id;
+                    $isDisabled = $toko->has_tanggungan && !$isSelected;
+                @endphp
                 <option value="{{ $toko->id }}"
-                    {{ old('toko_id', $pesanan->toko_id ?? '') == $toko->id ? 'selected' : '' }}>
-                    {{ $toko->nama_toko }}
+                    {{ $isSelected ? 'selected' : '' }}
+                    {{ $isDisabled ? 'disabled' : '' }}>
+                    {{ $toko->nama_toko }} {!! $toko->has_tanggungan ? '&#8212; (Ada Tanggungan Piutang)' : '' !!}
                 </option>
             @endforeach
         </select>

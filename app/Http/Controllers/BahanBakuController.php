@@ -26,7 +26,7 @@ class BahanBakuController extends Controller
     {
         $request->validate([
             'nama_bahan' => 'required',
-            'stok' => 'required|integer|min:0',
+            'stok' => 'required|numeric|min:0',
             'satuan' => 'required'
         ]);
 
@@ -45,7 +45,7 @@ class BahanBakuController extends Controller
     {
         $request->validate([
             'nama_bahan' => 'required',
-            'stok' => 'required|integer|min:0',
+            'stok' => 'required|numeric|min:0',
             'satuan' => 'required'
         ]);
 

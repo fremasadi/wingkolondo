@@ -12,13 +12,23 @@ use Illuminate\Validation\ValidationException;
 
 class ReturController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $returs = Retur::with(['distribusi.pesanan.toko', 'kurir', 'approver'])
-            ->latest()
-            ->get();
+        $tanggalMulai = $request->query('tanggal_mulai');
+        $tanggalSelesai = $request->query('tanggal_selesai');
 
-        return view('retur.index', compact('returs'));
+        $query = Retur::with(['distribusi.pesanan.toko', 'kurir', 'approver']);
+
+        if ($tanggalMulai) {
+            $query->whereDate('tanggal_retur', '>=', $tanggalMulai);
+        }
+        if ($tanggalSelesai) {
+            $query->whereDate('tanggal_retur', '<=', $tanggalSelesai);
+        }
+
+        $returs = $query->latest()->get();
+
+        return view('retur.index', compact('returs', 'tanggalMulai', 'tanggalSelesai'));
     }
 
     public function create()

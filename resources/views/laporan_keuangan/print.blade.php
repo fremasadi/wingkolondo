@@ -117,7 +117,7 @@
 
         <div>
             <button type="button" onclick="window.print()">Print / Save PDF</button>
-            <a href="{{ route('laporan-keuangan.index', ['bulan' => $selectedMonth, 'tahun' => $selectedYear, 'sumber' => $selectedSumber]) }}">Kembali</a>
+            <a href="{{ route('laporan-keuangan.index', request()->query()) }}">Kembali</a>
         </div>
     </div>
 

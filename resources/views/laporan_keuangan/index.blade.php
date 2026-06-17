@@ -2,14 +2,6 @@
 
 @php
     $formatCurrency = fn ($value) => 'Rp ' . number_format((float) $value, 0, ',', '.');
-    $printQuery = [
-        'bulan' => $selectedMonth,
-        'tahun' => $selectedYear,
-    ];
-
-    if ($selectedSumber) {
-        $printQuery['sumber'] = $selectedSumber;
-    }
 @endphp
 
 @section('content')
@@ -30,25 +22,49 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" class="row g-3 align-items-end">
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <label class="form-label">Tipe Filter</label>
+                    <select name="tipe_filter" id="tipeFilterSelect" class="form-select">
+                        <option value="bulan" @selected($tipeFilter === 'bulan')>Bulanan</option>
+                        <option value="tahun" @selected($tipeFilter === 'tahun')>Tahunan</option>
+                        <option value="minggu" @selected($tipeFilter === 'minggu')>Mingguan</option>
+                        <option value="range" @selected($tipeFilter === 'range')>Range Tanggal</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 filter-field filter-bulan">
                     <label class="form-label">Bulan</label>
                     <select name="bulan" class="form-select">
                         @foreach($monthOptions as $monthValue => $monthLabel)
-                            <option value="{{ $monthValue }}" @selected($selectedMonth === $monthValue)>{{ $monthLabel }}</option>
+                            <option value="{{ $monthValue }}" @selected($selectedMonth == $monthValue)>{{ $monthLabel }}</option>
                         @endforeach
                     </select>
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-3 filter-field filter-bulan filter-tahun">
                     <label class="form-label">Tahun</label>
                     <select name="tahun" class="form-select">
                         @foreach($yearOptions as $year)
-                            <option value="{{ $year }}" @selected($selectedYear === $year)>{{ $year }}</option>
+                            <option value="{{ $year }}" @selected($selectedYear == $year)>{{ $year }}</option>
                         @endforeach
                     </select>
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-6 filter-field filter-minggu">
+                    <label class="form-label">Tanggal Acuan Minggu</label>
+                    <input type="date" name="tanggal_minggu" class="form-control" value="{{ $selectedDateMinggu }}">
+                </div>
+
+                <div class="col-md-3 filter-field filter-range">
+                    <label class="form-label">Tanggal Mulai</label>
+                    <input type="date" name="tanggal_mulai" class="form-control" value="{{ $tanggalMulai }}">
+                </div>
+                <div class="col-md-3 filter-field filter-range">
+                    <label class="form-label">Tanggal Selesai</label>
+                    <input type="date" name="tanggal_selesai" class="form-control" value="{{ $tanggalSelesai }}">
+                </div>
+
+                <div class="col-md-3">
                     <label class="form-label">Sumber</label>
                     <select name="sumber" class="form-select">
                         <option value="">Semua Sumber</option>
@@ -71,7 +87,7 @@
 
     <div class="row g-3 mb-4">
         <div class="col-md-3">
-            <div class="card border-start border-4 border-primary">
+            <div class="card">
                 <div class="card-body">
                     <div class="text-muted small">Penjualan Cash/Transfer Bruto</div>
                     <h5 class="mb-0">{{ $formatCurrency($cashBruto) }}</h5>
@@ -80,7 +96,7 @@
         </div>
 
         <div class="col-md-3">
-            <div class="card border-start border-4 border-success">
+            <div class="card">
                 <div class="card-body">
                     <div class="text-muted small">Pengurang Retur Cash/Transfer</div>
                     <h5 class="mb-0 text-danger">{{ $formatCurrency($cashRetur) }}</h5>
@@ -89,7 +105,7 @@
         </div>
 
         <div class="col-md-3">
-            <div class="card border-start border-4 border-danger">
+            <div class="card">
                 <div class="card-body">
                     <div class="text-muted small">Cash/Transfer Netto</div>
                     <h5 class="mb-0 text-success">{{ $formatCurrency($cashNet) }}</h5>
@@ -98,7 +114,7 @@
         </div>
 
         <div class="col-md-3">
-            <div class="card border-start border-4 border-warning">
+            <div class="card">
                 <div class="card-body">
                     <div class="text-muted small">Tempo Lunas</div>
                     <h5 class="mb-0 text-info">{{ $formatCurrency($tempoNet) }}</h5>
@@ -109,7 +125,7 @@
 
     <div class="row g-3 mb-4">
         <div class="col-md-6">
-            <div class="card border-start border-4 border-dark">
+            <div class="card">
                 <div class="card-body">
                     <div class="text-muted small">Total Omzet</div>
                     <h4 class="mb-0">{{ $formatCurrency($totalOmzet) }}</h4>
@@ -118,7 +134,7 @@
         </div>
 
         <div class="col-md-6">
-            <div class="card border-start border-4 border-secondary">
+            <div class="card">
                 <div class="card-body">
                     <div class="text-muted small">Jumlah Transaksi</div>
                     <h4 class="mb-0">{{ number_format($totalEntries) }}</h4>
@@ -127,12 +143,22 @@
         </div>
     </div>
 
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Grafik Perkembangan Omzet (Nilai Netto)</h5>
+            <small class="text-muted">Berdasarkan filter aktif</small>
+        </div>
+        <div class="card-body">
+            <div id="chartOmzet"></div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered align-middle mb-0">
                     <thead>
-                        <tr class="table-danger text-center align-middle">
+                        <tr class="text-center align-middle">
                             <th style="min-width: 120px;">Tanggal/Bulan</th>
                             <th style="min-width: 150px;">Referensi</th>
                             <th style="min-width: 220px;">Toko</th>
@@ -179,3 +205,106 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipeFilterSelect = document.getElementById('tipeFilterSelect');
+    function toggleFields() {
+        if (!tipeFilterSelect) return;
+        const val = tipeFilterSelect.value;
+        
+        document.querySelectorAll('.filter-field').forEach(el => {
+            el.closest('.col-md-3, .col-md-6').style.setProperty('display', 'none', 'important');
+        });
+        
+        if (val === 'bulan') {
+            document.querySelectorAll('.filter-bulan').forEach(el => {
+                el.closest('.col-md-3, .col-md-6').style.setProperty('display', 'block', 'important');
+            });
+        } else if (val === 'tahun') {
+            document.querySelectorAll('.filter-tahun').forEach(el => {
+                el.closest('.col-md-3, .col-md-6').style.setProperty('display', 'block', 'important');
+            });
+        } else if (val === 'minggu') {
+            document.querySelectorAll('.filter-minggu').forEach(el => {
+                el.closest('.col-md-3, .col-md-6').style.setProperty('display', 'block', 'important');
+            });
+        } else if (val === 'range') {
+            document.querySelectorAll('.filter-range').forEach(el => {
+                el.closest('.col-md-3, .col-md-6').style.setProperty('display', 'block', 'important');
+            });
+        }
+    }
+    
+    if (tipeFilterSelect) {
+        tipeFilterSelect.addEventListener('change', toggleFields);
+        toggleFields();
+    }
+
+    const labels = @json($chartLabels);
+    const dataValues = @json($chartValues);
+
+    const options = {
+        series: [{
+            name: 'Netto Omzet',
+            data: dataValues
+        }],
+        chart: {
+            height: 350,
+            type: 'area',
+            toolbar: {
+                show: false
+            }
+        },
+        dataLabels: {
+            enabled: false
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 2
+        },
+        xaxis: {
+            categories: labels,
+            labels: {
+                style: {
+                    colors: '#a1acb8',
+                    fontSize: '12px'
+                }
+            }
+        },
+        yaxis: {
+            labels: {
+                formatter: function (value) {
+                    return "Rp " + new Intl.NumberFormat('id-ID').format(value);
+                },
+                style: {
+                    colors: '#a1acb8'
+                }
+            }
+        },
+        colors: ['#696cff'],
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.7,
+                opacityTo: 0.1,
+                stops: [0, 90, 100]
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function (value) {
+                    return "Rp " + new Intl.NumberFormat('id-ID').format(value);
+                }
+            }
+        }
+    };
+
+    const chart = new ApexCharts(document.querySelector("#chartOmzet"), options);
+    chart.render();
+});
+</script>
+@endpush

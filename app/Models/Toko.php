@@ -13,4 +13,9 @@ class Toko extends Model
         'latitude',
         'longitude',
     ];
+
+    public function piutangs()
+    {
+        return $this->hasMany(Piutang::class);
+    }
 }

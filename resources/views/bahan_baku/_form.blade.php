@@ -7,7 +7,7 @@
 
     <div class="col-md-3 mb-3">
         <label class="form-label">Stok</label>
-        <input type="number" name="stok" min="0" class="form-control"
+        <input type="number" name="stok" min="0" step="any" class="form-control"
             value="{{ old('stok', $bahanBaku->stok ?? 0) }}" required>
     </div>
 

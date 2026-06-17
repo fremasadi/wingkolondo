@@ -26,6 +26,25 @@
         </div>
     @endif
 
+    <div class="card mb-4">
+        <div class="card-body">
+            <form action="{{ route('produksis.index') }}" method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Tanggal Mulai</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Tanggal Selesai</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2"><i class="bx bx-filter-alt"></i> Filter</button>
+                    <a href="{{ route('produksis.index') }}" class="btn btn-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="card">
         <div class="table-responsive">
             <table class="table">
@@ -33,7 +52,8 @@
                     <tr>
                         <th>Tanggal</th>
                         <th>Status</th>
-                        <th>Detail</th>
+                        <th>Nama Produk</th>
+                        <th>Jumlah</th>
                         <th width="180">Aksi</th>
                     </tr>
                 </thead>
@@ -48,7 +68,12 @@
                             </td>
                             <td>
                                 @foreach($p->details as $d)
-                                    {{ $d->produk->nama_produk }} ({{ $d->qty }})<br>
+                                    {{ $d->produk->nama_produk }} <br>
+                                @endforeach
+                            </td>
+                             <td>
+                                @foreach($p->details as $d)
+                                    {{ $d->qty }}<br>
                                 @endforeach
                             </td>
                             <td>

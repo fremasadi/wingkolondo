@@ -25,7 +25,9 @@ class PesananController extends Controller
     public function create()
     {
         return view('pesanan.create', [
-            'tokos' => Toko::orderBy('nama_toko')->get(),
+            'tokos' => Toko::withExists(['piutangs as has_tanggungan' => function($query) {
+                $query->where('status', 'belum_lunas');
+            }])->orderBy('nama_toko')->get(),
             'produks' => Produk::orderBy('nama_produk')->get(),
         ]);
     }
@@ -106,7 +108,9 @@ class PesananController extends Controller
 
         return view('pesanan.edit', [
             'pesanan' => $pesanan->load(['details.produk', 'distribusi']),
-            'tokos' => Toko::orderBy('nama_toko')->get(),
+            'tokos' => Toko::withExists(['piutangs as has_tanggungan' => function($query) {
+                $query->where('status', 'belum_lunas');
+            }])->orderBy('nama_toko')->get(),
             'produks' => Produk::orderBy('nama_produk')->get(),
             'kurirs' => User::where('role', 'kurir')->get(),
         ]);

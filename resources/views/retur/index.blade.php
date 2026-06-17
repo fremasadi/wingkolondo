@@ -11,11 +11,40 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     @endif
     @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     @endif
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label">Tanggal Mulai</label>
+                    <input type="date" name="tanggal_mulai" class="form-control" value="{{ $tanggalMulai }}">
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">Tanggal Selesai</label>
+                    <input type="date" name="tanggal_selesai" class="form-control" value="{{ $tanggalSelesai }}">
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bx bx-filter-alt"></i> Filter
+                    </button>
+                    <a href="{{ route('returs.index') }}" class="btn btn-outline-secondary w-100">
+                        Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <div class="card">
         <div class="table-responsive">

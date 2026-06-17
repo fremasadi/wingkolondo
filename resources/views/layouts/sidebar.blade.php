@@ -92,12 +92,12 @@
             </a>
         </li>
 
-        <li class="menu-item {{ request()->routeIs('omzet.*') ? 'active' : '' }}">
+        <!-- <li class="menu-item {{ request()->routeIs('omzet.*') ? 'active' : '' }}">
             <a href="{{ route('omzet.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-line-chart"></i>
                 <div>Omzet</div>
             </a>
-        </li>
+        </li> -->
 
         <li class="menu-item {{ request()->routeIs('laporan-keuangan.*') ? 'active' : '' }}">
             <a href="{{ route('laporan-keuangan.index') }}" class="menu-link">

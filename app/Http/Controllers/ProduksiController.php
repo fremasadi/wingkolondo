@@ -10,9 +10,19 @@ use App\Models\Produk;
 
 class ProduksiController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $produksis = Produksi::with('details.produk')->latest()->get();
+        $query = Produksi::with('details.produk')->latest();
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('tanggal_produksi', [$request->start_date, $request->end_date]);
+        } elseif ($request->filled('start_date')) {
+            $query->whereDate('tanggal_produksi', '>=', $request->start_date);
+        } elseif ($request->filled('end_date')) {
+            $query->whereDate('tanggal_produksi', '<=', $request->end_date);
+        }
+
+        $produksis = $query->get();
 
         return view('produksi.index', compact('produksis'));
     }

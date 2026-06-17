@@ -24,16 +24,73 @@ class LaporanKeuanganController extends Controller
     private function buildReportData(Request $request): array
     {
         $now = now();
-        $selectedMonth = max(1, min(12, (int) $request->query('bulan', $now->month)));
-        $selectedYear = max(2000, min(2100, (int) $request->query('tahun', $now->year)));
-        $selectedSumber = $request->query('sumber');
+        $tipeFilter = $request->query('tipe_filter', 'bulan');
+        if (! in_array($tipeFilter, ['bulan', 'tahun', 'minggu', 'range'], true)) {
+            $tipeFilter = 'bulan';
+        }
 
+        $selectedMonth = null;
+        $selectedYear = null;
+        $selectedDateMinggu = null;
+        $tanggalMulai = null;
+        $tanggalSelesai = null;
+
+        switch ($tipeFilter) {
+            case 'tahun':
+                $selectedYear = max(2000, min(2100, (int) $request->query('tahun', $now->year)));
+                $periodStart = Carbon::create($selectedYear, 1, 1)->startOfYear();
+                $periodEnd = $periodStart->copy()->endOfYear();
+                $reportTitle = 'Laporan Keuangan Detail Tahun ' . $selectedYear;
+                break;
+
+            case 'minggu':
+                $selectedDateMinggu = $request->query('tanggal_minggu', $now->toDateString());
+                try {
+                    $pivotDate = Carbon::parse($selectedDateMinggu);
+                } catch (\Exception $e) {
+                    $pivotDate = $now->copy();
+                    $selectedDateMinggu = $now->toDateString();
+                }
+                $periodStart = $pivotDate->copy()->startOfWeek(Carbon::MONDAY)->startOfDay();
+                $periodEnd = $pivotDate->copy()->endOfWeek(Carbon::SUNDAY)->endOfDay();
+                $reportTitle = 'Laporan Keuangan Detail Mingguan (' . $periodStart->translatedFormat('d M Y') . ' - ' . $periodEnd->translatedFormat('d M Y') . ')';
+                break;
+
+            case 'range':
+                $defaultStart = $now->copy()->startOfMonth()->toDateString();
+                $defaultEnd = $now->copy()->endOfMonth()->toDateString();
+                $tanggalMulai = $request->query('tanggal_mulai', $defaultStart);
+                $tanggalSelesai = $request->query('tanggal_selesai', $defaultEnd);
+
+                try {
+                    $periodStart = Carbon::parse($tanggalMulai)->startOfDay();
+                } catch (\Exception $e) {
+                    $periodStart = Carbon::parse($defaultStart)->startOfDay();
+                    $tanggalMulai = $defaultStart;
+                }
+                try {
+                    $periodEnd = Carbon::parse($tanggalSelesai)->endOfDay();
+                } catch (\Exception $e) {
+                    $periodEnd = Carbon::parse($defaultEnd)->endOfDay();
+                    $tanggalSelesai = $defaultEnd;
+                }
+                $reportTitle = 'Laporan Keuangan Detail Periode (' . $periodStart->translatedFormat('d M Y') . ' - ' . $periodEnd->translatedFormat('d M Y') . ')';
+                break;
+
+            case 'bulan':
+            default:
+                $selectedMonth = max(1, min(12, (int) $request->query('bulan', $now->month)));
+                $selectedYear = max(2000, min(2100, (int) $request->query('tahun', $now->year)));
+                $periodStart = Carbon::create($selectedYear, $selectedMonth, 1)->startOfMonth();
+                $periodEnd = $periodStart->copy()->endOfMonth();
+                $reportTitle = 'Laporan Keuangan Detail Bulan ' . strtoupper($this->monthOptions()[$selectedMonth]) . ' ' . $selectedYear;
+                break;
+        }
+
+        $selectedSumber = $request->query('sumber');
         if (! in_array($selectedSumber, ['cash_transfer', 'tempo', null, ''], true)) {
             $selectedSumber = null;
         }
-
-        $periodStart = Carbon::create($selectedYear, $selectedMonth, 1)->startOfMonth();
-        $periodEnd = $periodStart->copy()->endOfMonth();
 
         $cashEntries = $this->buildCashTransferEntries($periodStart, $periodEnd);
         $tempoEntries = $this->buildTempoEntries($periodStart, $periodEnd);
@@ -50,6 +107,78 @@ class LaporanKeuanganController extends Controller
         $tempoNet = (float) $tempoEntries->sum('netto');
         $totalOmzet = $cashNet + $tempoNet;
 
+        // Group entries for chart
+        $chartData = [];
+        switch ($tipeFilter) {
+            case 'tahun':
+                for ($m = 1; $m <= 12; $m++) {
+                    $monthName = $this->monthOptions()[$m];
+                    $chartData[$monthName] = 0;
+                }
+                foreach ($entries as $entry) {
+                    $mNum = (int)$entry->tanggal->format('n');
+                    if (isset($this->monthOptions()[$mNum])) {
+                        $monthName = $this->monthOptions()[$mNum];
+                        $chartData[$monthName] += $entry->netto;
+                    }
+                }
+                break;
+
+            case 'minggu':
+                $daysOfWeek = [
+                    1 => 'Senin',
+                    2 => 'Selasa',
+                    3 => 'Rabu',
+                    4 => 'Kamis',
+                    5 => 'Jumat',
+                    6 => 'Sabtu',
+                    7 => 'Minggu',
+                ];
+                foreach ($daysOfWeek as $dayName) {
+                    $chartData[$dayName] = 0;
+                }
+                foreach ($entries as $entry) {
+                    $dayNum = (int)$entry->tanggal->format('N');
+                    if (isset($daysOfWeek[$dayNum])) {
+                        $chartData[$daysOfWeek[$dayNum]] += $entry->netto;
+                    }
+                }
+                break;
+
+            case 'bulan':
+            case 'range':
+            default:
+                $diffInDays = $periodStart->diffInDays($periodEnd);
+                if ($diffInDays > 62) {
+                    $current = $periodStart->copy()->startOfMonth();
+                    while ($current->lte($periodEnd)) {
+                        $monthYearKey = $current->translatedFormat('M Y');
+                        $chartData[$monthYearKey] = 0;
+                        $current->addMonth();
+                    }
+                    foreach ($entries as $entry) {
+                        $key = $entry->tanggal->translatedFormat('M Y');
+                        if (isset($chartData[$key])) {
+                            $chartData[$key] += $entry->netto;
+                        }
+                    }
+                } else {
+                    $current = $periodStart->copy();
+                    while ($current->lte($periodEnd)) {
+                        $key = $current->translatedFormat('d M');
+                        $chartData[$key] = 0;
+                        $current->addDay();
+                    }
+                    foreach ($entries as $entry) {
+                        $key = $entry->tanggal->translatedFormat('d M');
+                        if (isset($chartData[$key])) {
+                            $chartData[$key] += $entry->netto;
+                        }
+                    }
+                }
+                break;
+        }
+
         return [
             'entries' => $entries,
             'cashBruto' => $cashBruto,
@@ -60,12 +189,19 @@ class LaporanKeuanganController extends Controller
             'totalEntries' => $entries->count(),
             'periodStart' => $periodStart,
             'periodEnd' => $periodEnd,
-            'selectedMonth' => $selectedMonth,
-            'selectedYear' => $selectedYear,
+            'tipeFilter' => $tipeFilter,
+            'selectedMonth' => $selectedMonth ?: ($now->month),
+            'selectedYear' => $selectedYear ?: ($now->year),
+            'selectedDateMinggu' => $selectedDateMinggu ?: ($now->toDateString()),
+            'tanggalMulai' => $tanggalMulai ?: ($periodStart->toDateString()),
+            'tanggalSelesai' => $tanggalSelesai ?: ($periodEnd->toDateString()),
             'selectedSumber' => $selectedSumber ?: null,
             'monthOptions' => $this->monthOptions(),
             'yearOptions' => $this->yearOptions(),
-            'reportTitle' => 'Laporan Keuangan Detail Bulan ' . strtoupper($this->monthOptions()[$selectedMonth]) . ' ' . $selectedYear,
+            'reportTitle' => $reportTitle,
+            'chartLabels' => array_keys($chartData),
+            'chartValues' => array_values($chartData),
+            'printQuery' => $request->query(),
         ];
     }
 
