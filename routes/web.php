@@ -13,6 +13,7 @@ use App\Http\Controllers\PiutangController;
 use App\Http\Controllers\OmzetController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LaporanKeuanganController;
+use App\Http\Controllers\PembuanganStokController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -50,6 +51,11 @@ Route::middleware('auth')->group(function () {
         ->name('laporan-keuangan.index');
     Route::get('laporan-keuangan/print', [LaporanKeuanganController::class, 'print'])
         ->name('laporan-keuangan.print');
+
+    // Pembuangan Stok Kadaluarsa
+    Route::get('pembuangan-stok', [PembuanganStokController::class, 'index'])->name('pembuangan-stok.index');
+    Route::post('pembuangan-stok/{produk}/manual', [PembuanganStokController::class, 'buangManual'])->name('pembuangan-stok.manual');
+    Route::post('pembuangan-stok/otomatis', [PembuanganStokController::class, 'buangOtomatis'])->name('pembuangan-stok.otomatis');
 });
 
 require __DIR__ . '/auth.php';

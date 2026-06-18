@@ -5,9 +5,21 @@
 
     <div class="d-flex justify-content-between mb-3">
         <h4 class="fw-bold">Data Produk</h4>
-        <a href="{{ route('produks.create') }}" class="btn btn-primary">
-            <i class="bx bx-plus"></i> Tambah Produk
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('pembuangan-stok.index') }}" class="btn btn-outline-danger">
+                <i class="bx bx-history me-1"></i> Riwayat Pembuangan
+            </a>
+            <form method="POST" action="{{ route('pembuangan-stok.otomatis') }}"
+                  onsubmit="return confirm('Jalankan pembuangan otomatis untuk semua produk kadaluarsa sekarang?')">
+                @csrf
+                <button type="submit" class="btn btn-danger">
+                    <i class="bx bx-refresh me-1"></i> Buang Semua Kadaluarsa
+                </button>
+            </form>
+            <a href="{{ route('produks.create') }}" class="btn btn-primary">
+                <i class="bx bx-plus"></i> Tambah Produk
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -85,10 +97,52 @@
                                 <i class="bx bx-edit"></i>
                             </a>
 
+                            {{-- Tombol Buang untuk produk kadaluarsa yang masih ada stok --}}
+                            @if($exp && $exp->isPast() && $produk->stok > 0)
+                                <button type="button" class="btn btn-sm btn-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalBuang{{ $produk->id }}"
+                                    title="Buang stok kadaluarsa">
+                                    <i class="bx bx-trash-alt"></i>
+                                </button>
+
+                                <!-- Modal Buang -->
+                                <div class="modal fade" id="modalBuang{{ $produk->id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title"><i class="bx bx-trash-alt me-2"></i>Buang Stok Kadaluarsa</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="POST" action="{{ route('pembuangan-stok.manual', $produk) }}">
+                                                @csrf
+                                                <div class="modal-body">
+                                                    <p class="text-muted">Produk <strong>{{ $produk->nama_produk }}</strong> sudah kadaluarsa sejak <strong>{{ $exp->format('d/m/Y') }}</strong>.</p>
+                                                    <p class="text-muted">Stok tersedia: <strong>{{ $produk->stok }} pcs</strong></p>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Qty yang Dibuang</label>
+                                                        <input type="number" name="qty" class="form-control"
+                                                               min="1" max="{{ $produk->stok }}"
+                                                               value="{{ $produk->stok }}" required>
+                                                        <div class="form-text">Default: buang semua stok ({{ $produk->stok }} pcs)</div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                    <button type="submit" class="btn btn-danger">
+                                                        <i class="bx bx-trash-alt me-1"></i> Buang Sekarang
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
                             @if($produk->detail_produksis_count == 0 && $produk->detail_returs_count == 0)
                                 <form action="{{ route('produks.destroy', $produk) }}" method="POST" class="d-inline">
                                     @csrf @method('DELETE')
-                                    <button onclick="return confirm('Hapus produk ini?')" class="btn btn-sm btn-danger">
+                                    <button onclick="return confirm('Hapus produk ini?')" class="btn btn-sm btn-outline-danger" title="Hapus Produk">
                                         <i class="bx bx-trash"></i>
                                     </button>
                                 </form>

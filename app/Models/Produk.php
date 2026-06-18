@@ -9,6 +9,11 @@ class Produk extends Model
 {
     protected $fillable = ['nama_produk', 'stok', 'harga'];
 
+    public function pembuanganStoks()
+    {
+        return $this->hasMany(PembuanganStok::class);
+    }
+
     public function detailReturs()
     {
         return $this->hasMany(DetailRetur::class);
