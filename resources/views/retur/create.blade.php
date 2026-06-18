@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
 <div class="container-xxl container-p-y">
     <h4 class="fw-bold mb-3">Buat Tugas Retur</h4>
 
@@ -17,7 +20,9 @@
             <div class="card-body row">
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Order Selesai</label>
-                    <select name="distribusi_id" id="distribusi_id" class="form-select" required>
+
+                    {{-- Hidden real select for form submission --}}
+                    <select name="distribusi_id" id="distribusi_id" style="display:none" required>
                         <option value="">-- Pilih Order --</option>
                         @foreach ($distribusis as $d)
                             @php
@@ -33,14 +38,55 @@
                                 $canPotongPiutang = $piutangStatus === 'lunas';
                             @endphp
                             <option value="{{ $d->id }}"
+                                data-toko-id="{{ $d->pesanan->toko_id }}"
+                                data-tanggal="{{ \Carbon\Carbon::parse($d->tanggal_kirim)->format('Y-m-d') }}"
                                 data-items='@json($items)'
                                 data-can-potong-piutang="{{ $canPotongPiutang ? '1' : '0' }}"
                                 data-piutang-status="{{ $piutangStatus ?: 'tidak_ada' }}">
-                                {{ $d->pesanan->order_code ?? '#' . $d->pesanan->id }} | {{ $d->pesanan->toko->nama_toko }}
+                                {{ $d->pesanan->order_code ?? '#' . $d->pesanan->id }} | {{ $d->pesanan->toko->nama_toko }} | Tgl Kirim: {{ \Carbon\Carbon::parse($d->tanggal_kirim)->format('d-m-Y') }}
                             </option>
                         @endforeach
                     </select>
+
+                    {{-- Custom dropdown with built-in filter --}}
+                    <div class="custom-order-dropdown" id="customOrderDropdown">
+                        <div class="custom-order-trigger form-select d-flex align-items-center" id="orderTrigger" style="cursor:pointer;">
+                            <span id="orderTriggerText" class="text-muted">-- Pilih Order --</span>
+                        </div>
+                        <div class="custom-order-menu shadow" id="orderMenu" style="display:none; position:absolute; z-index:9999; background:#fff; border:1px solid #ced4da; border-radius:6px; width:100%; min-width:340px;">
+                            {{-- Filter row inside dropdown --}}
+                            <div class="p-2 border-bottom bg-light">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label mb-1" style="font-size:11px; color:#888;">Tanggal Kirim</label>
+                                        <input type="date" id="inDropFilter_tanggal" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label mb-1" style="font-size:11px; color:#888;">Toko</label>
+                                        <select id="inDropFilter_toko" class="form-select form-select-sm">
+                                            <option value="">Semua Toko</option>
+                                            @php
+                                                $uniqueTokos = collect($distribusis)->pluck('pesanan.toko')->unique('id')->sortBy('nama_toko');
+                                            @endphp
+                                            @foreach($uniqueTokos as $t)
+                                                @if($t)
+                                                    <option value="{{ $t->id }}">{{ $t->nama_toko }}</option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            {{-- Search text --}}
+                            <div class="px-2 pt-2">
+                                <input type="text" id="inDropFilter_search" class="form-control form-control-sm" placeholder="Cari order...">
+                            </div>
+                            {{-- Items list --}}
+                            <ul class="list-unstyled mb-0 mt-1" id="orderMenuList" style="max-height:220px; overflow-y:auto; padding: 4px 0;"></ul>
+                        </div>
+                    </div>
                 </div>
+
 
                 <div class="col-md-4 mb-3">
                     <label class="form-label">Kurir Pickup</label>
@@ -261,6 +307,132 @@ document.addEventListener('DOMContentLoaded', function () {
 
     refreshProdukOptions();
     refreshRefundOptions();
+});
+</script>
+
+@php
+    $uniqueTokos = collect($distribusis)->pluck('pesanan.toko')->unique('id')->sortBy('nama_toko');
+@endphp
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ── Custom Order Dropdown Logic ──────────────────────────────
+    var hiddenSelect   = document.getElementById('distribusi_id');
+    var trigger        = document.getElementById('orderTrigger');
+    var triggerText    = document.getElementById('orderTriggerText');
+    var menu           = document.getElementById('orderMenu');
+    var menuList       = document.getElementById('orderMenuList');
+    var filterTanggal  = document.getElementById('inDropFilter_tanggal');
+    var filterToko     = document.getElementById('inDropFilter_toko');
+    var filterSearch   = document.getElementById('inDropFilter_search');
+
+    // Build options data from hidden select
+    var allOpts = Array.from(hiddenSelect.options).slice(1).map(function(opt) {
+        return {
+            value:              opt.value,
+            text:               opt.textContent.trim(),
+            tanggal:            opt.getAttribute('data-tanggal') || '',
+            tokoId:             opt.getAttribute('data-toko-id') || '',
+            items:              opt.getAttribute('data-items') || '[]',
+            canPotong:          opt.getAttribute('data-can-potong-piutang') || '0',
+            piutangStatus:      opt.getAttribute('data-piutang-status') || 'tidak_ada',
+        };
+    });
+
+    function renderList() {
+        var tgl    = filterTanggal.value;
+        var toko   = filterToko.value;
+        var search = filterSearch.value.toLowerCase();
+
+        var filtered = allOpts.filter(function(o) {
+            var matchTgl   = !tgl    || o.tanggal === tgl;
+            var matchToko  = !toko   || o.tokoId  === toko;
+            var matchSearch = !search || o.text.toLowerCase().indexOf(search) > -1;
+            return matchTgl && matchToko && matchSearch;
+        });
+
+        menuList.innerHTML = '';
+
+        if (filtered.length === 0) {
+            menuList.innerHTML = '<li class="px-3 py-2 text-muted" style="font-size:13px;">Tidak ada order yang cocok</li>';
+            return;
+        }
+
+        filtered.forEach(function(o) {
+            var li = document.createElement('li');
+            li.style.cssText = 'padding:7px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid #f0f0f0;';
+            li.textContent = o.text;
+            li.addEventListener('mouseenter', function() { li.style.background = '#f5f7ff'; });
+            li.addEventListener('mouseleave', function() { li.style.background = ''; });
+            li.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                selectOrder(o);
+                closeMenu();
+            });
+            menuList.appendChild(li);
+        });
+    }
+
+    function selectOrder(o) {
+        // Update hidden select
+        hiddenSelect.value = o.value;
+
+        // Update trigger text
+        triggerText.textContent = o.text;
+        triggerText.classList.remove('text-muted');
+
+        // Dispatch change event so existing JS listeners fire
+        hiddenSelect.dispatchEvent(new Event('change'));
+    }
+
+    function openMenu() {
+        menu.style.display = 'block';
+        filterSearch.focus();
+        renderList();
+    }
+
+    function closeMenu() {
+        menu.style.display = 'none';
+    }
+
+    trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (menu.style.display === 'none') {
+            openMenu();
+        } else {
+            closeMenu();
+        }
+    });
+
+    // Keep menu open when interacting inside
+    menu.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+    menu.addEventListener('click', function(e) { e.stopPropagation(); });
+
+    // Prevent date picker from closing menu
+    // When date input is focused, set a flag so outside click doesn't close menu
+    var datePickerActive = false;
+    filterTanggal.addEventListener('focus', function() { datePickerActive = true; });
+    filterTanggal.addEventListener('blur', function() {
+        // Small delay to allow date selection to complete first
+        setTimeout(function() { datePickerActive = false; }, 300);
+    });
+    // Also stop propagation on any click on the date input itself
+    filterTanggal.addEventListener('click', function(e) { e.stopPropagation(); });
+
+    // Close on outside click — but only if date picker is not active
+    document.addEventListener('click', function() {
+        if (!datePickerActive) {
+            closeMenu();
+        }
+    });
+
+    filterTanggal.addEventListener('change', renderList);
+    filterToko.addEventListener('change', renderList);
+    filterSearch.addEventListener('input', renderList);
+
+    // Wrap dropdown in relative container
+    var dropdown = document.getElementById('customOrderDropdown');
+    dropdown.style.position = 'relative';
 });
 </script>
 @endsection

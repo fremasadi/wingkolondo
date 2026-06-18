@@ -37,7 +37,7 @@
                     <label class="form-label">Tanggal Selesai</label>
                     <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
                 </div>
-                <div class="col-md-4 d-flex align-items-end">
+                <div class="col-md-4 d-flex align-items-end">   
                     <button type="submit" class="btn btn-primary me-2"><i class="bx bx-filter-alt"></i> Filter</button>
                     <a href="{{ route('produksis.index') }}" class="btn btn-secondary">Reset</a>
                 </div>

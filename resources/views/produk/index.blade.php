@@ -43,15 +43,19 @@
                         <td>
                             {{ $produk->nama_produk }}
                             @if($produk->detail_produksis_count > 0)
-                                <span class="badge bg-label-info ms-1" title="Digunakan dalam {{ $produk->detail_produksis_count }} produksi">
+                                <span class="text-info fw-bold ms-1" title="Digunakan dalam {{ $produk->detail_produksis_count }} produksi">
                                     <i class="bx bx-box"></i> {{ $produk->detail_produksis_count }}
                                 </span>
                             @endif
                         </td>
                         <td>
-                            <span class="badge bg-label-primary">
-                                {{ $produk->stok }}
-                            </span>
+                            @if($produk->stok <= 0)
+                                <span class="text-danger fw-bold">{{ $produk->stok }}</span>
+                            @elseif($produk->stok <= 10)
+                                <span class="text-warning fw-bold">{{ $produk->stok }}</span>
+                            @else
+                                <span class="text-success fw-bold">{{ $produk->stok }}</span>
+                            @endif
                         </td>
                         <td>Rp {{ number_format($produk->harga, 0, ',', '.') }}</td>
                         <td>

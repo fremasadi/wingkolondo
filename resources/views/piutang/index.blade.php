@@ -36,7 +36,7 @@
                         <td>Rp {{ number_format($p->sisa_tagihan) }}</td>
                         <td>{{ $p->jatuh_tempo ?? '-' }}</td>
                         <td>
-                            <span class="badge bg-{{ $p->status == 'lunas' ? 'success' : 'warning' }}">
+                            <span class="text-{{ $p->status == 'lunas' ? 'success' : 'warning' }} fw-bold">
                                 {{ strtoupper($p->status) }}
                             </span>
                         </td>

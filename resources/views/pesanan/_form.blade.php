@@ -71,6 +71,40 @@
         </div>
     </div>
 
+    <div class="col-md-4 mb-3" id="jatuh_tempo_container" style="display: none;">
+        <label class="form-label">Jatuh Tempo Piutang</label>
+        <input type="date" name="jatuh_tempo" id="jatuh_tempo" class="form-control @error('jatuh_tempo') is-invalid @enderror"
+            value="{{ old('jatuh_tempo', $pesanan->piutang->jatuh_tempo ?? '') }}">
+        <div class="invalid-feedback" data-error-for="jatuh_tempo">
+            @error('jatuh_tempo') {{ $message }} @else Tanggal jatuh tempo wajib diisi jika metode pembayaran adalah tempo. @enderror
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const metodeSelect = document.querySelector('select[name="metode_pembayaran"]');
+    const tempoContainer = document.getElementById('jatuh_tempo_container');
+    const tempoInput = document.getElementById('jatuh_tempo');
+
+    function toggleTempo() {
+        if (metodeSelect.value === 'tempo') {
+            tempoContainer.style.display = 'block';
+            tempoInput.setAttribute('required', 'required');
+        } else {
+            tempoContainer.style.display = 'none';
+            tempoInput.removeAttribute('required');
+            tempoInput.value = '';
+        }
+    }
+
+    if (metodeSelect) {
+        metodeSelect.addEventListener('change', toggleTempo);
+        toggleTempo();
+    }
+});
+</script>
+
     @isset($pesanan)
     <div class="col-md-4 mb-3">
         <label class="form-label">Status Pesanan</label>

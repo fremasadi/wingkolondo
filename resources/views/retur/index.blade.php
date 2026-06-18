@@ -79,7 +79,7 @@
                             <td>{{ optional($retur->tanggal_pengambilan)->format('Y-m-d') ?? '-' }}</td>
                             <td>{{ $retur->kurir->name ?? '-' }}</td>
                             <td>
-                                <span class="badge bg-label-{{ $statusClass }}">
+                                <span class="text-{{ $statusClass }} fw-bold">
                                     {{ ucfirst(str_replace('_', ' ', $retur->status)) }}
                                 </span>
                             </td>

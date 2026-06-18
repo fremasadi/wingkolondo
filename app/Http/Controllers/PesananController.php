@@ -43,6 +43,7 @@ class PesananController extends Controller
             'qty' => 'required|array|min:1',
             'qty.*' => 'required|integer|min:1',
             'metode_pembayaran' => 'required|in:cash,transfer,tempo',
+            'jatuh_tempo' => 'required_if:metode_pembayaran,tempo|nullable|date',
 
         ], [
             'toko_id.required' => 'Toko wajib dipilih.',
@@ -94,6 +95,21 @@ class PesananController extends Controller
 
         // 3. Update total harga
         $pesanan->updateTotalHarga();
+
+        if ($request->metode_pembayaran === 'tempo') {
+            \App\Models\Piutang::updateOrCreate(
+                ['pesanan_id' => $pesanan->id],
+                [
+                    'toko_id' => $pesanan->toko_id,
+                    'total_tagihan' => $pesanan->total_harga,
+                    'sisa_tagihan' => $pesanan->total_harga,
+                    'status' => 'belum_lunas',
+                    'jatuh_tempo' => $request->jatuh_tempo,
+                ]
+            );
+        } else {
+            \App\Models\Piutang::where('pesanan_id', $pesanan->id)->delete();
+        }
 
         return redirect()->route('pesanans.edit', $pesanan)->with('success', 'Pesanan berhasil disimpan. Silakan tambah distribusi jika diperlukan.');
     }
@@ -148,6 +164,7 @@ class PesananController extends Controller
             'tanggal_pesanan' => 'required|date',
             'tanggal_kirim' => 'required|date|after_or_equal:tanggal_pesanan',
             'metode_pembayaran' => 'required|in:cash,transfer,tempo',
+            'jatuh_tempo' => 'required_if:metode_pembayaran,tempo|nullable|date',
         ];
 
         if ($pesanan->status_pesanan === 'diproses') {
@@ -220,6 +237,21 @@ class PesananController extends Controller
             $pesanan->updateTotalHarga();
         }
 
+        if ($request->metode_pembayaran === 'tempo') {
+            \App\Models\Piutang::updateOrCreate(
+                ['pesanan_id' => $pesanan->id],
+                [
+                    'toko_id' => $pesanan->toko_id,
+                    'total_tagihan' => $pesanan->total_harga,
+                    'sisa_tagihan' => $pesanan->total_harga,
+                    'jatuh_tempo' => $request->jatuh_tempo,
+                ]
+            );
+        } else {
+            \App\Models\Piutang::where('pesanan_id', $pesanan->id)->delete();
+        }
+
+        DB::commit();
         return redirect()->route('pesanans.edit', $pesanan)->with('success', 'Pesanan berhasil diperbarui');
     }
 

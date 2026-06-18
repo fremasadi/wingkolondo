@@ -79,11 +79,11 @@
                         </td>
                         <td>
                             @if($item->stok <= 0)
-                                <span class="badge bg-label-danger">{{ $item->stok }}</span>
+                                <span class="text-danger fw-bold">{{ $item->stok }}</span>
                             @elseif($item->stok <= 10)
-                                <span class="badge bg-label-warning">{{ $item->stok }}</span>
+                                <span class="text-warning fw-bold">{{ $item->stok }}</span>
                             @else
-                                <span class="badge bg-label-success">{{ $item->stok }}</span>
+                                <span class="text-success fw-bold">{{ $item->stok }}</span>
                             @endif
                         </td>
                         <td>{{ $item->satuan }}</td>

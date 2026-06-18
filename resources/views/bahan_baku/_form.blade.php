@@ -17,6 +17,7 @@
             <option value="">-- Pilih Satuan --</option>
             <option value="kg" @selected(old('satuan', $bahanBaku->satuan ?? '') == 'kg')>Kg</option>
             <option value="gram" @selected(old('satuan', $bahanBaku->satuan ?? '') == 'gram')>Gram</option>
+            <option value="ons" @selected(old('satuan', $bahanBaku->satuan ?? '') == 'ons')>Ons</option>
             <option value="liter" @selected(old('satuan', $bahanBaku->satuan ?? '') == 'liter')>Liter</option>
             <option value="pcs" @selected(old('satuan', $bahanBaku->satuan ?? '') == 'pcs')>Pcs</option>
             <option value="pack" @selected(old('satuan', $bahanBaku->satuan ?? '') == 'pack')>Pack</option>

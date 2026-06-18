@@ -58,7 +58,7 @@
                             <td>{{ $pesanan->toko->nama_toko }}</td>
                             <td>{{ $pesanan->distribusi->kurir->name ?? '-' }}</td>
                             <td>
-                                <span class="badge bg-label-{{ $pesanan->distribusi->status_pengiriman == 'selesai' ? 'success' : ($pesanan->distribusi->status_pengiriman == 'terkirim' ? 'primary' : 'warning') }}">
+                                <span class="text-{{ $pesanan->distribusi->status_pengiriman == 'selesai' ? 'success' : ($pesanan->distribusi->status_pengiriman == 'terkirim' ? 'primary' : 'warning') }} fw-bold">
                                     {{ ucfirst($pesanan->distribusi->status_pengiriman) }}
                                 </span>
                             </td>
@@ -100,17 +100,17 @@
                             <td>{{ $pesanan->tanggal_pesanan }}</td>
                             <td>{{ $pesanan->toko->nama_toko }}</td>
                             <td>
-                                <span class="badge bg-label-info">
+                                <span class="text-info fw-bold">
                                     {{ ucfirst($pesanan->status_pesanan) }}
                                 </span>
                             </td>
                             <td>
                                 @if($pesanan->distribusi)
-                                    <span class="badge bg-label-{{ $pesanan->distribusi->status_pengiriman == 'selesai' ? 'success' : ($pesanan->distribusi->status_pengiriman == 'terkirim' ? 'primary' : 'warning') }}">
+                                    <span class="text-{{ $pesanan->distribusi->status_pengiriman == 'selesai' ? 'success' : ($pesanan->distribusi->status_pengiriman == 'terkirim' ? 'primary' : 'warning') }} fw-bold">
                                         {{ ucfirst($pesanan->distribusi->status_pengiriman) }}
                                     </span>
                                 @else
-                                    <span class="badge bg-label-secondary">Belum</span>
+                                    <span class="text-secondary fw-bold">Belum</span>
                                 @endif
                             </td>
                             <td>{{ $pesanan->total_harga_formatted }}</td>
