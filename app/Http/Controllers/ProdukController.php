@@ -106,7 +106,13 @@ class ProdukController extends Controller
 
     public function show(Produk $produk)
 {
-    $produk->load('bahanBakus'); // eager load relasi
-    return view('produk.show', compact('produk'));
+    $produk->load('bahanBakus');
+    $riwayatProduksi = $produk->detailProduksis()
+        ->join('produksis', 'produksis.id', '=', 'detail_produksis.produksi_id')
+        ->where('produksis.status', 'selesai')
+        ->orderByDesc('produksis.tanggal_produksi')
+        ->select('detail_produksis.*', 'produksis.tanggal_produksi', 'produksis.id as produksi_id')
+        ->get();
+    return view('produk.show', compact('produk', 'riwayatProduksi'));
 }
 }

@@ -31,6 +31,33 @@
                             <th>Harga</th>
                             <td>: Rp {{ number_format($produk->harga, 0, ',', '.') }}</td>
                         </tr>
+                        <tr>
+                            <th>Kadaluarsa</th>
+                            <td>:
+                                @php $exp = $produk->tanggal_kadaluarsa; @endphp
+                                @if(!$exp)
+                                    <span class="text-muted">Belum pernah diproduksi</span>
+                                @elseif($exp->isPast())
+                                    <span class="text-danger fw-bold">
+                                        <i class="bx bx-error-circle"></i>
+                                        {{ $exp->format('d/m/Y') }}
+                                        <small class="ms-1">(Sudah kadaluarsa {{ $exp->diffForHumans() }})</small>
+                                    </span>
+                                @elseif($exp->diffInDays(now()) <= 7)
+                                    <span class="text-warning fw-bold">
+                                        <i class="bx bx-time-five"></i>
+                                        {{ $exp->format('d/m/Y') }}
+                                        <small class="ms-1">({{ $exp->diffForHumans() }})</small>
+                                    </span>
+                                @else
+                                    <span class="text-success fw-bold">
+                                        <i class="bx bx-check-circle"></i>
+                                        {{ $exp->format('d/m/Y') }}
+                                        <small class="ms-1">({{ $exp->diffForHumans() }})</small>
+                                    </span>
+                                @endif
+                            </td>
+                        </tr>
                     </table>
                 </div>
             </div>
@@ -67,6 +94,66 @@
                             <i class="bx bx-info-circle me-2"></i>
                             Belum ada komposisi bahan baku untuk produk ini.
                         </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Riwayat Produksi -->
+    <div class="row mt-2">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bx bx-history me-2"></i>Riwayat Produksi & Kadaluarsa</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if($riwayatProduksi->isEmpty())
+                        <div class="p-3">
+                            <div class="alert alert-info mb-0">
+                                <i class="bx bx-info-circle me-2"></i>Belum ada riwayat produksi selesai untuk produk ini.
+                            </div>
+                        </div>
+                    @else
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>ID Produksi</th>
+                                    <th>Tanggal Produksi</th>
+                                    <th>Qty Diproduksi</th>
+                                    <th>Tanggal Kadaluarsa</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($riwayatProduksi as $i => $riwayat)
+                                @php
+                                    $expDate = \Carbon\Carbon::parse($riwayat->tanggal_produksi)->addDays(30);
+                                @endphp
+                                <tr>
+                                    <td>{{ $i + 1 }}</td>
+                                    <td>
+                                        <a href="{{ route('produksis.show', $riwayat->produksi_id) }}" class="text-primary">
+                                            #{{ $riwayat->produksi_id }}
+                                        </a>
+                                    </td>
+                                    <td>{{ \Carbon\Carbon::parse($riwayat->tanggal_produksi)->format('d/m/Y') }}</td>
+                                    <td>{{ $riwayat->qty }} pcs</td>
+                                    <td class="fw-bold">{{ $expDate->format('d/m/Y') }}</td>
+                                    <td>
+                                        @if($expDate->isPast())
+                                            <span class="text-danger fw-bold"><i class="bx bx-error-circle"></i> Kadaluarsa</span>
+                                        @elseif($expDate->diffInDays(now()) <= 7)
+                                            <span class="text-warning fw-bold"><i class="bx bx-time-five"></i> Hampir Kadaluarsa</span>
+                                        @else
+                                            <span class="text-success fw-bold"><i class="bx bx-check-circle"></i> Masih Aman</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     @endif
                 </div>
             </div>

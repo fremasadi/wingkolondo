@@ -34,6 +34,7 @@
                         <th>Nama Produk</th>
                         <th>Stok</th>
                         <th>Harga (per pcs)</th>
+                        <th>Kadaluarsa</th>
                         <th width="150">Aksi</th>
                     </tr>
                 </thead>
@@ -59,6 +60,24 @@
                         </td>
                         <td>Rp {{ number_format($produk->harga, 0, ',', '.') }}</td>
                         <td>
+                            @php $exp = $produk->tanggal_kadaluarsa; @endphp
+                            @if(!$exp)
+                                <span class="text-muted">—</span>
+                            @elseif($exp->isPast())
+                                <span class="text-danger fw-bold" title="Sudah kadaluarsa">
+                                    <i class="bx bx-error-circle"></i> {{ $exp->format('d/m/Y') }}
+                                </span>
+                            @elseif($exp->diffInDays(now()) <= 7)
+                                <span class="text-warning fw-bold" title="Hampir kadaluarsa">
+                                    <i class="bx bx-time-five"></i> {{ $exp->format('d/m/Y') }}
+                                </span>
+                            @else
+                                <span class="text-success fw-bold">
+                                    <i class="bx bx-check-circle"></i> {{ $exp->format('d/m/Y') }}
+                                </span>
+                            @endif
+                        </td>
+                        <td>
                             <a href="{{ route('produks.show', $produk) }}" class="btn btn-sm btn-info">
                                 <i class="bx bx-show"></i>
                             </a>
@@ -82,7 +101,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="text-center">Data produk belum tersedia</td>
+                        <td colspan="5" class="text-center">Data produk belum tersedia</td>
                     </tr>
                     @endforelse
                 </tbody>

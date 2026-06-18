@@ -117,7 +117,7 @@
             <div class="card">
                 <div class="card-body">
                     <div class="text-muted small">Tempo Lunas</div>
-                    <h5 class="mb-0">{{ $formatCurrency($tempoNet) }}</h5>
+                    <h5 class="mb-0 ">{{ $formatCurrency($tempoNet) }}</h5>
                 </div>
             </div>
         </div>

@@ -40,7 +40,7 @@
                                 {{ strtoupper($p->status) }}
                             </span>
                         </td>
-                        <td>
+                        <td>    `
                             @if($p->status == 'belum_lunas')
                             <a href="{{ route('piutangs.edit', $p) }}"
                                class="btn btn-sm btn-primary">
