@@ -25,7 +25,7 @@
     </div>
 
     {{-- Distribusi Section --}}
-    <div class="card">
+    <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Distribusi</h5>
             @if($pesanan->distribusi && $pesanan->distribusi->status_pengiriman === 'terkirim')

@@ -182,8 +182,6 @@ document.addEventListener("DOMContentLoaded", function() {
 </table>
 <div class="text-danger small d-none" id="detail-item-error">Lengkapi semua produk dan qty minimal 1, serta pastikan qty tidak melebihi stok.</div>
 
-</div>
-
 <div class="mt-3">
     @if(empty($hideSubmitButton))
         <button class="btn btn-primary">{{ $button }}</button>
